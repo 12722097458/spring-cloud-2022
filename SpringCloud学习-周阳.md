@@ -250,10 +250,19 @@ cloud-provider-payment8081生产者
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
-
 ```
 
 ###### 1.3 写配置文件yml
@@ -269,21 +278,27 @@ spring:
     name: cloud-payment-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.137.110:3306/index_test?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://192.168.137.110:3306/db_cloud?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: root
+
+knife4j:
+  enable: true    # http://localhost:8081/doc.html
+  setting:
+    language: en-US
 ```
 
 ###### 1.4 编写启动类
 
 ```java
 @SpringBootApplication
+@MapperScan("com.ityj.springcloud.mapper")
 public class Payment8081Starter {
-
     public static void main(String[] args) {
         SpringApplication.run(Payment8081Starter.class, args);
     }
 }
+
 ```
 
 ###### 1.5 编写业务代码
@@ -299,272 +314,150 @@ public class Payment8081Starter {
 
 （2）实体类entity编写
 
-引入了lombok以及swagger
+```java
+@Data
+@TableName("payment")
+public class PaymentPO implements Serializable {
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
-```xml
-<!--swagger配置-->
-<dependency>
-    <groupId>io.springfox</groupId>
-    <artifactId>springfox-swagger2</artifactId>
-    <version>2.9.2</version>
-</dependency>
-<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
-<dependency>
-    <groupId>com.github.xiaoymin</groupId>
-    <artifactId>swagger-bootstrap-ui</artifactId>
-    <version>1.9.1</version>
-</dependency>
+    @TableField(value = "serial")
+    private String serial;
+}
+
+@Data
+public class PaymentDTO {
+    @NotEmpty(message = "The value of serial can not be empty!")
+    private String serial;
+}
 ```
 
+编写了返回给前端的统一接口CommonResult
+
 ```java
-package com.ityj.springcloud.entity;
-
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
-import java.io.Serializable;
-
 @Data
-@ApiModel(value = "账单实体类")
-public class Payment implements Serializable {
-
-    @ApiModelProperty(value = "id：自增，无需传入")
-    private Long id;
-    @ApiModelProperty(value = "序列号")
-    private String serial;
-
-}
-
-// 编写了返回给前端的统一接口CommonResult
-package com.ityj.springcloud.entity;
-
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
-@ApiModel(value = "返回给前端的公共属性")
 public class CommonResult<T> implements Serializable {
+    private static final Integer SUCCESS_CODE = 0;
+    private static final Integer FAIL_CODE = -1;
 
-    @ApiModelProperty(value = "0：成功；-1：失败")
     private Integer code;
+    private String msg;
+    private transient T data;
 
-    @ApiModelProperty(value = "信息描述")
-    private String message;
+    public static <T> CommonResult<T> success(T data) {
+        return new CommonResult<>(SUCCESS_CODE, CommonConstant.SUCCESS_MSG, data);
+    }
 
-    @ApiModelProperty(value = "返回的最终数据")
-    private T data;
+    public static CommonResult<String> success() {
+        return new CommonResult<>(SUCCESS_CODE, CommonConstant.SUCCESS_MSG, null);
+    }
 
-    public CommonResult(Integer code, String message) {
-        this.code = code;
-        this.message = message;
+    public static <T> CommonResult<T> fail(String message) {
+        return new CommonResult<>(FAIL_CODE, message, null);
     }
 }
+```
 
-// swagger的配置
-package com.ityj.springcloud.config;
+Knife4j文档管理配置
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+```java
+@EnableSwagger2WebMvc
+@Configuration
+public class Knife4jConfig {
 
-import java.util.ArrayList;
+    private final OpenApiExtensionResolver openApiExtensionResolver;
 
-@Configuration //配置类
-@EnableSwagger2// 开启Swagger2的自动配置
-public class SwaggerConfig {
+    @Autowired
+    public Knife4jConfig(OpenApiExtensionResolver openApiExtensionResolver) {
+        this.openApiExtensionResolver = openApiExtensionResolver;
+    }
 
-    // http://localhost:8081/doc.html
     @Bean
-    public Docket docket() {
+    public Docket createRestApi() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .enable(true)  // 控制是否生效，可以通过配置文件，对生产环境的swagger进行排除
-                .select()       // 通过.select()方法，去配置扫描接口,RequestHandlerSelectors配置如何扫描接口
-                .apis(RequestHandlerSelectors.basePackage("com.ityj.springcloud"))
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.ityj.springcloud.controller"))
+                .paths(PathSelectors.any())
+                .build()
+                .extensions(openApiExtensionResolver.buildExtensions(""));
+    }
+ 
+    private ApiInfo apiInfo() {
+        return new ApiInfoBuilder()
+                .title("Spring Cloud Learning")
+                .description("Restful API")
+                .termsOfServiceUrl("www.ityj.com")
+                .version("version 1.0")
                 .build();
     }
-
-    /**
-     * 自定义配置文档信息
-     *
-     * @return
-     */
-    private ApiInfo apiInfo() {
-        Contact contact = new Contact("Jack", "1272097458", "1272097458@qq.com");
-        return new ApiInfo(
-                "Springboot cloud payment模块",            // 文档大标题
-                "cloud payment模块",                          // 描述
-                "2021年2月19日15:28:16",                 //版本
-                "https://mp.csdn.net/console/article",   // 组织链接
-                contact,                                       // 联系人信息
-                "Apache 2.0",                           // 许可
-                "许可链接",                           // 许可链接
-                new ArrayList()                                 // 扩展
-        );
-    }
-
 }
-
 ```
 
-（3）mapper接口创建以及对应的xml编写
+```yml
+knife4j:
+  enable: true    # http://localhost:8081/doc.html
+  setting:
+    language: en-US
+```
+
+（3）通过mybatis-plus实现mapper创建
 
 ```java
-package com.ityj.springcloud.mapper;
-
-import com.ityj.springcloud.entity.Payment;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-
-@Mapper
-public interface PaymentMapper {
-
-    Payment getPaymentById(@Param(value = "id") long id);
-
-    int create(Payment payment);
-
+public interface PaymentMapper extends BaseMapper<PaymentPO> {
 }
 ```
 
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.ityj.springcloud.mapper.PaymentMapper">
-
-    <resultMap id="PaymentResultMap" type="com.ityj.springcloud.entity.Payment">
-        <id column="id" property="id" jdbcType="BIGINT"/>
-        <id column="serial" property="serial" jdbcType="VARCHAR"/>
-    </resultMap>
-    <select id="getPaymentById" parameterType="long" resultMap="PaymentResultMap">
-        select * from payment where id = #{id}
-    </select>
-
-    <insert id="create" parameterType="Payment" useGeneratedKeys="true" keyProperty="id">
-        insert into payment (serial) values(#{serial})
-    </insert>
-
-</mapper>
-```
-
-引入了mybatis的全局配置文件
-
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE configuration
-        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-config.dtd">
-<configuration>
-    <settings>
-        <setting name="logImpl" value="STDOUT_LOGGING"/>
-    </settings>
-</configuration>
-```
 
 （4）service业务层编写
 
 ```java
-package com.ityj.springcloud.service;
-
-import com.ityj.springcloud.entity.Payment;
-
-public interface PaymentService {
-
-    Payment getPaymentById(long id);
-
-    int create(Payment payment);
-
+public interface PaymentService extends IService<PaymentPO> {
+    String save(PaymentDTO paymentDTO);
 }
 
 
-package com.ityj.springcloud.service.impl;
-
-import com.ityj.springcloud.entity.Payment;
-import com.ityj.springcloud.mapper.PaymentMapper;
-import com.ityj.springcloud.service.PaymentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 @Service
-public class PaymentServiceImpl implements PaymentService {
+public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, PaymentPO> implements PaymentService {
 
-    @Autowired
-    private PaymentMapper paymentMapper;
-
+    @Transactional
     @Override
-    public Payment getPaymentById(long id) {
-        return paymentMapper.getPaymentById(id);
-    }
-
-    @Override
-    public int create(Payment payment) {
-        return paymentMapper.create(payment);
+    public String save(PaymentDTO paymentDTO) {
+        PaymentPO paymentPO = new PaymentPO();
+        BeanUtils.copyProperties(paymentDTO, paymentPO);
+        int insert = baseMapper.insert(paymentPO);
+        return insert > 0 ? null : "Save error!";
     }
 }
 ```
 
-
-
 （5）controller编写
 
 ```java
-package com.ityj.springcloud.controller;
-
-import com.ityj.springcloud.entity.CommonResult;
-import com.ityj.springcloud.entity.Payment;
-import com.ityj.springcloud.service.PaymentService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.*;
-
-@RequestMapping(path = "/payment")
 @RestController
-@Slf4j
+@RequestMapping("/payment")
 public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
 
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
-    public CommonResult<Payment> create(@RequestBody Payment payment) {
-        log.info("进入create()。。。");
-        int result = paymentService.create(payment);
-        if (result <= 0) {
-            return new CommonResult<Payment>(-1, "数据插入失败！");
-        }
-        return new CommonResult<Payment>(0, "数据插入成功！", payment);
+    @GetMapping("/get/{id}")
+    public CommonResult<PaymentPO> getById(@PathVariable("id") Long id) {
+        return CommonResult.success(paymentService.getById(id));
     }
 
-    @RequestMapping(path = "/getPayment/{id}", method = RequestMethod.GET)
-    public CommonResult<Payment> getPaymentById(@PathVariable(value = "id") long id) {
-        log.info("进入 getPaymentById()。。。");
-        Payment payment = paymentService.getPaymentById(id);
-        if (ObjectUtils.isEmpty(payment)) {
-            return new CommonResult<Payment>(-1, "数据查询失败，id为" + id + "的账单不存在，或操作出错！");
-        }
-        return new CommonResult<Payment>(0, "数据查询成功！", payment);
+    @PostMapping("/save")
+    public CommonResult<String> save(@RequestBody @Valid PaymentDTO paymentDTO) {
+        String message = paymentService.save(paymentDTO);
+        return StringUtils.hasText(message) ? CommonResult.fail(message) : CommonResult.success();
     }
-
 
 }
-
 ```
+
+
 
 ##### 3、创建order消费者模块
 
@@ -705,8 +598,8 @@ public class ApplicationContextConfig {
 ```java
 package com.ityj.springcloud.controller;
 
-import com.ityj.springcloud.entity.CommonResult;
-import com.ityj.springcloud.entity.Payment;
+import com.ityj.springcloud.entity.model.CommonResult;
+import com.ityj.springcloud.entity.po.PaymentPO;
 import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2085,8 +1978,8 @@ public class OpenFeignOrder80 {
 ```java
 package com.ityj.springcloud.controller;
 
-import com.ityj.springcloud.entity.CommonResult;
-import com.ityj.springcloud.entity.Payment;
+import com.ityj.springcloud.entity.model.CommonResult;
+import com.ityj.springcloud.entity.po.PaymentPO;
 import com.ityj.springcloud.service.PaymentFeignService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
