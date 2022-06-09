@@ -481,29 +481,31 @@ public class PaymentController {
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-consumer-order80</artifactId>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
+            <artifactId>spring-boot-actuator</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
+        <!--热部署-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -511,36 +513,14 @@ public class PaymentController {
             <optional>true</optional>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!--swagger配置-->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>swagger-bootstrap-ui</artifactId>
+            <artifactId>knife4j-spring-boot-starter</artifactId>
         </dependency>
 
     </dependencies>
 
-
 </project>
-
 ```
 
 ###### 1.3 改配置文件yml
@@ -550,20 +530,24 @@ public class PaymentController {
 ```yml
 server:
   port: 80
+
+spring:
+  application:
+    name: cloud-order-service
+
+knife4j:
+  enable: true    # http://localhost:80/doc.html
+  setting:
+    language: en-US
 ```
 
 ###### 1.4 编写启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 @SpringBootApplication
-public class Order80Starter {
+public class ConsumerOrder80Starter {
     public static void main(String[] args) {
-        SpringApplication.run(Order80Starter.class, args);
+        SpringApplication.run(ConsumerOrder80Starter.class, args);
     }
 }
 ```
@@ -579,18 +563,11 @@ public class Order80Starter {
 （1）编写配置类获取RestTemplate
 
 ```java
-package com.ityj.springcloud.config;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
-
 @Configuration
 public class ApplicationContextConfig {
 
-    // 注册RestTemplate用于服务访问
     @Bean
-    public RestTemplate getRestTemplate() {
+    public RestTemplate restTemplate() {
         return new RestTemplate();
     }
 
@@ -600,43 +577,29 @@ public class ApplicationContextConfig {
 （2）和controller控制器共同实现服务间的调用
 
 ```java
-package com.ityj.springcloud.controller;
-
-import com.ityj.springcloud.entity.model.CommonResult;
-import com.ityj.springcloud.entity.po.PaymentPO;
-import io.swagger.annotations.ApiModel;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
 @RestController
-@RequestMapping(path = "/consumer")
-@ApiModel(value = "订单模块消费者")
 @Slf4j
 public class OrderController {
 
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String PAYMENT_URL = "http://localhost:8081/payment/";
+    private static final String PAYMENT_URL = "http://localhost:8001/";
 
-    @RequestMapping(path = "/payment/create", method = RequestMethod.GET)
-    public CommonResult<Payment> createPayment(Payment payment) {
-        log.info("进入OrderController.createPayment()...入参为{}", payment);
-        return restTemplate.postForObject(PAYMENT_URL + "create", payment, CommonResult.class);
+    @GetMapping("/consumer/payment/get/{id}")
+    public CommonResult<PaymentPO> getById(@PathVariable("id") Long id) {
+        return restTemplate.getForObject(PAYMENT_URL + "payment/get/" + id, CommonResult.class);
     }
 
-    @RequestMapping(path = "/payment/getPayment/{id}", method = RequestMethod.GET)
-    public CommonResult<Payment> getPayment(@PathVariable(value = "id") long id) {
-        log.info("进入OrderController.getPayment()...入参为{}", id);
-        return restTemplate.getForObject(PAYMENT_URL + "getPayment/" + id, CommonResult.class);
+    @GetMapping("/consumer/payment/save")
+    public CommonResult<String> save(PaymentDTO paymentDTO) {
+        log.info("Save: {}", paymentDTO);
+        return restTemplate.postForObject(PAYMENT_URL + "payment/save", paymentDTO, CommonResult.class);
     }
-
 }
 
 
-//实体类CommonResult和Payment和payment8081一模一样：后续优化
+//实体类CommonResult和Payment和payment8001一模一样：后续优化
 ```
 
 ##### 4、抽取公共模块，减少重复代码
@@ -5678,5 +5641,6 @@ seata-order-service2001模块
 
 > 根目录下莫名多了一个lib包，里面有一些jar,导致和maven仓库里的jar包冲突掉，项目启动失败。删除Lib文件夹。重启解决。
 
+## 3、无空参构造导致报错
 
-
+> com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.ityj.springcloud.entity.model.CommonResult` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)

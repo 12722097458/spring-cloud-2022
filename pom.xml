@@ -25,6 +25,7 @@
 
 	<modules>
 		<module>cloud-provider-payment8001</module>
+		<module>cloud-consumer-order80</module>
 	</modules>
 
 	<!-- 子模块继承之后，提供作用：锁定版本+子module不用写groupId和version

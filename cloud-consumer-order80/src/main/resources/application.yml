@@ -1,0 +1,11 @@
+server:
+  port: 80
+
+spring:
+  application:
+    name: cloud-order-service
+
+knife4j:
+  enable: true    # http://localhost:80/doc.html
+  setting:
+    language: en-US
