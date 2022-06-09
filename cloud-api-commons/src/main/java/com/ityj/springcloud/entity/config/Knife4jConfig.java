@@ -1,4 +1,4 @@
-package com.ityj.springcloud.config;
+package com.ityj.springcloud.entity.config;
 
 import com.github.xiaoymin.knife4j.spring.extension.OpenApiExtensionResolver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +16,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 @Configuration
 public class Knife4jConfig {
 
-    private final OpenApiExtensionResolver openApiExtensionResolver;
-
-    @Autowired
-    public Knife4jConfig(OpenApiExtensionResolver openApiExtensionResolver) {
-        this.openApiExtensionResolver = openApiExtensionResolver;
-    }
-
     @Bean
     public Docket createRestApi() {
         return new Docket(DocumentationType.SWAGGER_2)
@@ -30,8 +23,7 @@ public class Knife4jConfig {
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.ityj.springcloud.controller"))
                 .paths(PathSelectors.any())
-                .build()
-                .extensions(openApiExtensionResolver.buildExtensions(""));
+                .build();
     }
  
     private ApiInfo apiInfo() {

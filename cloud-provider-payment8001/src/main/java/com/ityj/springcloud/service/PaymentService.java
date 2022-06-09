@@ -6,4 +6,6 @@ import com.ityj.springcloud.entity.po.PaymentPO;
 
 public interface PaymentService extends IService<PaymentPO> {
     String save(PaymentDTO paymentDTO);
+
+    PaymentDTO getPaymentById(Long id);
 }

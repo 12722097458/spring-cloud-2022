@@ -1,4 +1,4 @@
-package com.ityj.springcloud.utils;
+package com.ityj.springcloud.entity.constant;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

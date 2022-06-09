@@ -20,4 +20,12 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, PaymentPO> im
         int insert = baseMapper.insert(paymentPO);
         return insert > 0 ? null : "Save error!";
     }
+
+    @Override
+    public PaymentDTO getPaymentById(Long id) {
+        PaymentPO paymentPO = baseMapper.selectById(id);
+        PaymentDTO paymentDTO = new PaymentDTO();
+        BeanUtils.copyProperties(paymentPO, paymentDTO);
+        return paymentDTO;
+    }
 }

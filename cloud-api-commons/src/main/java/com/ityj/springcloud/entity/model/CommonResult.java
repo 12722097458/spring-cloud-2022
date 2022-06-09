@@ -1,6 +1,6 @@
 package com.ityj.springcloud.entity.model;
 
-import com.ityj.springcloud.utils.CommonConstant;
+import com.ityj.springcloud.entity.constant.CommonConstant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

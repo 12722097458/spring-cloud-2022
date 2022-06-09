@@ -2,10 +2,11 @@ package com.ityj.springcloud.controller;
 
 import com.ityj.springcloud.entity.dto.PaymentDTO;
 import com.ityj.springcloud.entity.model.CommonResult;
-import com.ityj.springcloud.entity.po.PaymentPO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
@@ -18,7 +19,7 @@ public class OrderController {
     private static final String PAYMENT_URL = "http://localhost:8001/";
 
     @GetMapping("/consumer/payment/get/{id}")
-    public CommonResult<PaymentPO> getById(@PathVariable("id") Long id) {
+    public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {
         return restTemplate.getForObject(PAYMENT_URL + "payment/get/" + id, CommonResult.class);
     }
 
