@@ -46,7 +46,7 @@ SR： Service Release，SR1表示第1个正式版本，一般同时标注GA：(G
 
 
 
-#### 2、项目版本各组件确定
+#### 2、各组件版本确定
 
 | 工具          | 版本           |
 | ------------- | -------------- |
@@ -59,7 +59,7 @@ SR： Service Release，SR1表示第1个正式版本，一般同时标注GA：(G
 
 
 
-#### 3、环境搭建
+#### 3、基本环境搭建
 
 ##### 1、 创建project-父工程搭建
 
@@ -604,68 +604,19 @@ public class OrderController {
 
 ##### 4、抽取公共模块，减少重复代码
 
+[git提交记录](https://github.com/12722097458/spring-cloud-2022/commit/99db2b7a884b49505e6b67bbfafe56ce38db98a3)
+
 创建模块cloud-api-commons
 
 ###### 1.1 建module
 
 ###### 1.2 改pom
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>springcloud-0219-00</artifactId>
-        <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>cloud-api-commons</artifactId>
-
-    <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/cn.hutool/hutool-all -->
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>5.1.0</version>
-        </dependency>
-    </dependencies>
-
-</project>
-```
-
-
-
 ###### 1.3 抽取共性代码
 
 （1）相同的CommonResult和Payment实体类在payment和order两个模块中都使用到了，可以抽取出来，两个模块再引入commons
 
-1.4 order和payment模块引入commons
-
-```xml
-<!--引入cloud-api-commons模块-->
-<dependency>
-    <groupId>com.ityj.springcloud</groupId>
-    <artifactId>cloud-api-commons</artifactId>
-    <version>${project.parent.version}</version>
-</dependency>
-```
+###### 1.4 order和payment模块引入commons
 
 
 
@@ -5644,3 +5595,10 @@ seata-order-service2001模块
 ## 3、无空参构造导致报错
 
 > com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.ityj.springcloud.entity.model.CommonResult` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)
+
+## 4、微服务Devtool热部署无法生效
+
+> 原因是把spring-boot-devtools依赖放到commons模块。但是加了一个 <optional>true</optional>去掉就可以了。
+
+==<optional>true</optional>表示两个项目之间依赖不传递；不设置optional或者optional是false，表示传递依赖。==
+
