@@ -182,11 +182,13 @@ SR： Service Release，SR1表示第1个正式版本，一般同时标注GA：(G
 * (2) pom中的dependencyManagement元素能让子项目中引入依赖而无需显式地列出版本号。maven会沿着父子层级关系向上走，直到找到一个拥有dependencyManagement元素的项目，然后就会使用这个dependencyManagement指定的版本号。
 * (3) 子项目需要的依赖，需要显式地声明，无需添加版本号。（子项目指定版本号就会优先使用自己设置的）
 
-##### 2、创建payment子模块（生产者）
+##### 2、创建payment8001子模块（生产者）
 
 ###### 1.1 建module
 
-cloud-provider-payment8081生产者
+cloud-provider-payment8001生产者
+
+`https://github.com/12722097458/spring-cloud-2022/commit/cca9413143c31cdaf850f44835dd42fa2a1aa1b1`
 
 ![image-20220607225049860](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220607225049.png)
 
@@ -271,7 +273,7 @@ cloud-provider-payment8081生产者
 
 ```yml
 server:
-  port: 8081
+  port: 8001
 
 spring:
   application:
@@ -283,7 +285,7 @@ spring:
     password: root
 
 knife4j:
-  enable: true    # http://localhost:8081/doc.html
+  enable: true    # http://localhost:8001/doc.html
   setting:
     language: en-US
 ```
@@ -293,7 +295,7 @@ knife4j:
 ```java
 @SpringBootApplication
 @MapperScan("com.ityj.springcloud.mapper")
-public class Payment8081Starter {
+public class Payment8001Starter {
     public static void main(String[] args) {
         SpringApplication.run(Payment8081Starter.class, args);
     }
@@ -397,7 +399,7 @@ public class Knife4jConfig {
 
 ```yml
 knife4j:
-  enable: true    # http://localhost:8081/doc.html
+  enable: true    # http://localhost:8001/doc.html
   setting:
     language: en-US
 ```
@@ -457,7 +459,9 @@ public class PaymentController {
 }
 ```
 
+（6）测试即可
 
+`http://localhost:8001/doc.html`
 
 ##### 3、创建order消费者模块
 
@@ -5659,4 +5663,20 @@ http://localhost:8401/rateLimit/customerBlockHandler
 ##### 1、新建订单Order-Module
 
 seata-order-service2001模块
+
+
+
+
+
+# C、开发中遇到的BUG
+
+## 1、子模块pom文件没有正常引入导致application.yml的样式为改变，启动失败。
+
+> 父项目是一个简单的maven项目，不需要引入springboot-parent. 之前直接引入了parent，导致子模块的jar包不能正常引入。
+
+## 2、jar包冲突
+
+> 根目录下莫名多了一个lib包，里面有一些jar,导致和maven仓库里的jar包冲突掉，项目启动失败。删除Lib文件夹。重启解决。
+
+
 

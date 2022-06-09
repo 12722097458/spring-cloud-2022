@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8001
 
 spring:
   application:
@@ -11,6 +11,6 @@ spring:
     password: root
 
 knife4j:
-  enable: true    # http://localhost:8081/doc.html
+  enable: true    # http://localhost:8001/doc.html
   setting:
     language: en-US

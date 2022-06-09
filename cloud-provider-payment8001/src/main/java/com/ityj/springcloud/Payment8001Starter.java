@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @MapperScan("com.ityj.springcloud.mapper")
-public class Payment8081Starter {
+public class Payment8001Starter {
     public static void main(String[] args) {
-        SpringApplication.run(Payment8081Starter.class, args);
+        SpringApplication.run(Payment8001Starter.class, args);
     }
 }
