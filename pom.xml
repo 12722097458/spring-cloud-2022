@@ -28,6 +28,8 @@
 		<module>cloud-consumer-order80</module>
 		<module>cloud-api-commons</module>
 		<module>cloud-eureka-server7001</module>
+		<module>cloud-eureka-server7002</module>
+		<module>cloud-eureka-server7003</module>
 	</modules>
 
 	<!-- 子模块继承之后，提供作用：锁定版本+子module不用写groupId和version

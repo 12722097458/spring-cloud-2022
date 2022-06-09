@@ -10,6 +10,7 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 target/
+~$SpringCloud 第二季2020.03.05.mmap.~$lock
 
 # Package Files #
 *.jar

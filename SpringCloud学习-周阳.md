@@ -771,11 +771,13 @@ eureka:
 
 需要搭建Eureka注册中心集群，实现负载均衡+故障容错
 
+![image-20220609233637906](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220609233645.png)
+
 ##### 1、EurekaServer集群环境构建
 
-###### 1.1  新建7002server
+###### 1.1  新建7002server和7002server
 
-参考7001server新建cloud-eureka-server7002：新建后再修改相关的配置
+参考7001server新建cloud-eureka-server7002/cloud-eureka-server7002：新建后再修改相关的配置
 
 ###### 1.2 修改Windows映射配置
 
@@ -783,6 +785,7 @@ eureka:
 * 修改映射配置添加进hosts文件
   * 127.0.0.1  eureka7001.com
   * 127.0.0.1  eureka7002.com
+  * 127.0.0.1  eureka7003.com
 
 ```shell
 # Copyright (c) 1993-2009 Microsoft Corp.
@@ -808,9 +811,10 @@ eureka:
 #	::1             localhost
 127.0.0.1  eureka7001.com
 127.0.0.1  eureka7002.com
+127.0.0.1  eureka7003.com
 ```
 
-1.3 修改EurekaServer 7001和7002 的配置文件
+1.3 修改EurekaServer 7001/7002/7003的配置文件
 
 7001:
 
@@ -820,12 +824,12 @@ server:
 
 eureka:
   instance:
-    hostname: eureka7001.com #eureka服务端的实例名字
+    hostname: eureka7001.com  #eureka服务端的实例名字
   client:
     register-with-eureka: false    #表识不向注册中心注册自己
     fetch-registry: false   #表示自己就是注册中心，职责是维护服务实例，并不需要去检索服务
     service-url:
-      defaultZone: http://eureka7002.com:7002/eureka/     #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址，如果有三个服务端，用逗号隔开
+      defaultZone: http://eureka7002.com:7002/eureka/,http://eureka7003.com:7003/eureka/    #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址
 ```
 
 7002:
@@ -836,29 +840,45 @@ server:
 
 eureka:
   instance:
-    hostname: eureka7002.com #eureka服务端的实例名字
+    hostname: eureka7002.com  #eureka服务端的实例名字
   client:
     register-with-eureka: false    #表识不向注册中心注册自己
     fetch-registry: false   #表示自己就是注册中心，职责是维护服务实例，并不需要去检索服务
     service-url:
-      defaultZone: http://eureka7001.com:7001/eureka/     #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址，如果有三个服务端，用逗号隔开
+      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7003.com:7003/eureka/    #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址；互相守望，相互注册。多个用逗号隔开
+```
+
+7003:
+
+```yml
+server:
+  port: 7003
+
+eureka:
+  instance:
+    hostname: eureka7003.com  #eureka服务端的实例名字
+  client:
+    register-with-eureka: false    #表识不向注册中心注册自己
+    fetch-registry: false   #表示自己就是注册中心，职责是维护服务实例，并不需要去检索服务
+    service-url:
+      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/    #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址；互相守望，相互注册。多个用逗号隔开
 ```
 
 ###### 1.3 测试
 
 因为在C:\Windows\System32\drivers\etc路径下的hosts文件修改了localhost的配置
 
-所以此时localhost可以映射为  -- 》  eureka7001.com  和 eureka7002.com
+所以此时localhost可以映射为  -- 》  eureka7001.com  、 eureka7002.com 和 eureka7003.com
 
-此时启动7001和7002服务
+此时启动7001、7002和7003服务
 
-访问以下链接都可以：（7001注册了7002的服务）
+访问以下链接都可以：（7001、7002和7003服务互相注册）
 
 * http://localhost:7001/
 * http://127.0.0.1:7001/
 * http://eureka7001.com:7001/
 
-![image-20210220095752182](https://i.loli.net/2021/02/24/s1NT6uDd9UYcQCy.png)
+![image-20220610000904571](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220610000904.png)
 
 
 
@@ -5536,9 +5556,11 @@ seata-order-service2001模块
 
 # C、开发中遇到的BUG
 
-## 1、子模块pom文件没有正常引入导致application.yml的样式为改变，启动失败。
+## 1、application.yml的样式未改变。
 
-> 父项目是一个简单的maven项目，不需要引入springboot-parent. 之前直接引入了parent，导致子模块的jar包不能正常引入。
+(1) 父项目是一个简单的maven项目，不需要引入springboot-parent. 之前直接引入了parent，导致子模块的jar包不能正常引入。==子模块pom文件没有正常引入==
+
+(2) 配置文件名字错误：写成了**appliaction.yml**
 
 ## 2、jar包冲突
 
