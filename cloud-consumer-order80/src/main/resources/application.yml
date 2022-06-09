@@ -5,3 +5,9 @@ spring:
   application:
     name: cloud-order-service
 
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:7001/eureka/    #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址
