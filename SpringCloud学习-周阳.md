@@ -630,7 +630,7 @@ public class OrderController {
 
 #####  1、单机Eureka服务端
 
-**建Eureka服务端cloud-eureka-server7001**
+**建Eureka服务端cloud-eureka-server7001**[git提交记录](https://github.com/12722097458/spring-cloud-2022/commit/48fbcf85611c759fcb84732f85b0bf67fc641ed7)
 
 IDEA生成eurekaServer端服务注册中心类似物业公司
 
@@ -720,7 +720,6 @@ EurekaClient端cloud-provider-payment8081将注册进EurekaServer成为服务提
 
 ```xml
 <!--eureka客户端-->
-<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-eureka-server -->
 <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>

@@ -9,3 +9,9 @@ spring:
     url: jdbc:mysql://192.168.137.110:3306/db_cloud?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: root
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:7001/eureka/    #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址
