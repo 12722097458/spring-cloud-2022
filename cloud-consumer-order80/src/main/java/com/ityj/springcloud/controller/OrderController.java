@@ -16,7 +16,9 @@ public class OrderController {
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String PAYMENT_URL = "http://localhost:8001/";
+//    private static final String PAYMENT_URL = "http://localhost:8001/";
+    private static final String PAYMENT_URL = "http://CLOUD-PAYMENT-SERVICE/";
+
 
     @GetMapping("/consumer/payment/get/{id}")
     public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {

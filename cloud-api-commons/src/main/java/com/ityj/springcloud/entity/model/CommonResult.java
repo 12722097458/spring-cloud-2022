@@ -18,6 +18,10 @@ public class CommonResult<T> implements Serializable {
     private String msg;
     private transient T data;
 
+    public static <T> CommonResult<T> success(T data, String msg) {
+        return new CommonResult<>(SUCCESS_CODE, msg, data);
+    }
+
     public static <T> CommonResult<T> success(T data) {
         return new CommonResult<>(SUCCESS_CODE, CommonConstant.SUCCESS_MSG, data);
     }

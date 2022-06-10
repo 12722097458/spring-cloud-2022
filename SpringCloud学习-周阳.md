@@ -10,9 +10,9 @@ SpringCloud ：分布式的微服务架构的
 
 ![image-20220607213434054](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220607213441.png)
 
-## A、SpringCloud
+# A、SpringCloud
 
-### 一、SpringCloud入门Eureka
+## 一、SpringCloud入门Eureka
 
 #### 1、SpringCloud和SpringBoot版本选择
 
@@ -897,14 +897,14 @@ eureka:
     fetchRegistry: true
     service-url:
     #defaultZone: http://localhost:7001/eureka           # eureka服务端的地址 ：单机版
-    defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka  #集群版
+    defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka  #集群版
 ```
 
 ###### 1.2 测试
 
-启动项目，访问http://eureka7001.com:7001/和http://eureka7002.com:7002/
+启动项目，访问http://eureka7001.com:7001/ ， http://eureka7002.com:7002/ 和 http://eureka7002.com:7002/
 
-![image-20210220101244075](D:\我的文件\gitRepository\cloud-image\img\image-20210220101244075.png)
+![image-20220610003000951](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220610003001.png)
 
 发现相互注册成功
 
@@ -912,7 +912,7 @@ eureka:
 
 访问http://eureka7001.com:80/doc.html对应的链接并进行调试，看结果是否成功！
 
-对于http请求，80端口默认可以不写。https：443
+对于http请求，80端口默认可以不写。https默认：443
 
 ![image-20210220101539732](D:\我的文件\gitRepository\cloud-image\img\image-20210220101539732.png)
 
@@ -932,7 +932,7 @@ eureka:
 
 * 添加注解@LoadBalanced  开启负载均衡：轮询
 
-* 并修改restTemplate的url为`PAYMENT_URL = "http://CLOUD-PAYMENT-SERVICE/payment/"; `
+* 并修改restTemplate的url为`PAYMENT_URL = "http://CLOUD-PAYMENT-SERVICE/"; `
 
 ###### 1.5 测试
 
@@ -998,9 +998,9 @@ public class Payment8081Starter {
 
 
 
-### 二、服务注册进zookeeper（单机版）
+## 二、服务注册进zookeeper（单机版）
 
-#### 1、在linux上安装zookeeper
+### 1、在linux上安装zookeeper
 
 （1）下载
 
@@ -1096,9 +1096,9 @@ stat /   # 查看节点的详细信息
 
 ![image-20210317162016666](D:\我的文件\gitRepository\cloud-image\img\image-20210317162016666.png)
 
-#### 2、创建一个生产者8084和一个消费者80注册入zookeeper
+### 2、创建一个生产者8084和一个消费者80注册入zookeeper
 
-##### 1. 创建一个服务提供者cloud-provider-payment8084
+#### 1. 创建一个服务提供者cloud-provider-payment8084
 
 （1）建module
 
@@ -1287,7 +1287,7 @@ public class PaymentController {
 
 ![image-20210220235214185](https://i.loli.net/2021/02/23/Yig3emO2t5hdKQE.png)
 
-##### 2. 创建一个消费者cloud-consumerzk-order80
+#### 2. 创建一个消费者cloud-consumerzk-order80
 
 （1）建module
 
@@ -4389,7 +4389,7 @@ public String paymentZipkin()
 
 
 
-## B、SpringCloud Alibaba
+# B、SpringCloud Alibaba
 
 ### 一、SpringCloud Alibaba Nacos服务注册和配置中心
 
