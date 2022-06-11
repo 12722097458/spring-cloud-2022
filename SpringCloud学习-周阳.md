@@ -998,6 +998,52 @@ public class Payment8081Starter {
 
 
 
+##### 6、Eureka的自我保护机制
+
+Eureka默认的配置eureka.server.enable-self-preservation=true，开启了自我保护机制。
+
+![image-20220611172429514](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611172436.png)
+
+> Eureka的保护模式主要是用于一组客户端和Eureka Server之间存在网络分区场景下的保护。一旦进入保护模式，Eureka Server将会尝试保护其服务注册表中的信息，不再删除服务注册表中的数据，也就是不会销毁任何微服务。（payment8001即使宕机，也会在Eureka界面显示。）
+
+==一句话：某时刻某一个微服务不可用了，Eureka不会立刻清理，依旧会对该微服务的信息进行保存==
+
+==属于CAP里面的AP分支==
+
+
+
+###### （1）禁用自我保护机制（一般不用）
+
+1.1 注册中心eureakeServer端7001 
+
+> 修改eureka.server.enable-self-preservation=false
+>
+> Eureka里的一个定时任务，每隔60秒清除无效instance
+>
+> eureka.server.eviction-interval-timer-in-ms=60000
+
+1.2 eureake Client端8001
+
+默认的心跳时间如下：
+
+> eureka.instance.lease-renewal-interval-in-seconds=30
+>
+> eureka.instance.lease-expiration-duration-in-seconds: 90
+
+也就是每隔30秒会向Eureka Server发送一个健康信号。Eureka服务器在收到上一次健康信号超过90秒会将其剔除。需要client-server配合使用。
+
+###### （2）测试
+
+修改后页面如下：
+
+![image-20220611173912378](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611173912.png)
+
+![image-20220611174152884](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611174152.png)
+
+![image-20220611174207315](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611174207.png)
+
+
+
 ## 二、服务注册进zookeeper（单机版）
 
 ### 1、在linux上安装zookeeper
