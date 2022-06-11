@@ -31,6 +31,7 @@
 		<module>cloud-eureka-server7002</module>
 		<module>cloud-eureka-server7003</module>
         <module>cloud-provider-payment8002</module>
+        <module>cloud-provider-payment8004</module>
     </modules>
 
 	<!-- 子模块继承之后，提供作用：锁定版本+子module不用写groupId和version

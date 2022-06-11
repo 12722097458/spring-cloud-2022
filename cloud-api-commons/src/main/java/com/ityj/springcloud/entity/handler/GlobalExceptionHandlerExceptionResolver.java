@@ -1,4 +1,4 @@
-package com.ityj.springcloud.handler;
+package com.ityj.springcloud.entity.handler;
 
 import com.ityj.springcloud.entity.model.CommonResult;
 import lombok.extern.slf4j.Slf4j;
