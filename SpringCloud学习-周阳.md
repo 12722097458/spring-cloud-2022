@@ -1115,7 +1115,8 @@ sh zkServer.sh start
 ```shell
 help
 ls /
-ls2 /
+ls2 /    # 'ls2' has been deprecated. Please use 'ls [-s] path' instead.
+ls -s /
 # 创建两个节点，创建节点时必须同时写入数据
 create /sanguo "songjiang"             # 持久存在
 get /sanguo   # 取数
@@ -1146,200 +1147,107 @@ stat /   # 查看节点的详细信息
 
 #### 1. 创建一个服务提供者cloud-provider-payment8084
 
-（1）建module
+##### （1）建module
 
-（2）改pom
+##### （2）改pom
 
-这里需要注意的是 zookeeper的依赖版本问题。
+这里需要注意的是 zookeeper的依赖版本问题。zookeeper-3.5.3-beta.jar:3，如果linux安装的zookeeper版本为3.4.9，和springboot默认版本不一致，会导致启动报错：解决方案1安装3.5.3-beta的程序。2是排除3.5.3-beta依赖，导入3.4.9的zookeeper
+
+这里用的是第一种，完全模仿8001创建出8004. pom删除eureka引入zookeeper
 
 ```xml
-<!--zookeeper-3.5.3-beta.jar:3由于linux安装的zookeeper版本为3.4.9，和springboot默认版本不一致，导致启动报错-->
 <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
-    <exclusions>
-        <exclusion>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
-<!--排除后添加3.4.9版本的zookeeper-->
-<dependency>
-    <groupId>org.apache.zookeeper</groupId>
-    <artifactId>zookeeper</artifactId>
-    <version>3.4.9</version>
 </dependency>
 ```
 
-完整版
+##### （3）写yml
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>springcloud-0219-00</artifactId>
-        <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>cloud-provider-payment8084</artifactId>
-
-    <dependencies>
-
-        <dependency>
-            <groupId>com.ityj.springcloud</groupId>
-            <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-zookeeper-discovery -->
-        <!--zookeeper-3.5.3-beta.jar:3由于linux安装的zookeeper版本为3.4.9，和springboot默认版本不一致，导致启动报错-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.zookeeper</groupId>
-                    <artifactId>zookeeper</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!--排除后添加3.4.9版本的zookeeper-->
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-            <version>3.4.9</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-
-    </dependencies>
-
-</project>
-```
-
-（3）写yml
+和8001的区别如下：端口以及注册中心。删除eureka的配置，添加zookeeper的配置
 
 ```yml
 server:
-  port: 8084
+  port: 8004
 
-spring:
-  application:
-    name: cloud-provider-payment
   cloud:
     zookeeper:
-      connect-string: 192.168.118.128:2181  # 这里是zookeeper的地址，2181是zk默认端口号
+      connect-string: 192.168.137.110:2181
 ```
 
-（4）启动类
+##### （4）启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
 @SpringBootApplication
+@MapperScan("com.ityj.springcloud.mapper")
 @EnableDiscoveryClient
-public class Payment8084ZkStarter {
+public class Payment8004Starter {
     public static void main(String[] args) {
-
-        SpringApplication.run(Payment8084ZkStarter.class, args);
-
+        SpringApplication.run(Payment8004Starter.class, args);
     }
 }
 ```
 
-（5）编写业务代码
+##### （5）编写业务代码
+
+和8001保持一致，改了一下路径
 
 ```java
-package com.ityj.springcloud.controller;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
-
-@RestController
 @Slf4j
+@RestController
+@RequestMapping("/zk/payment")
 public class PaymentController {
 
-    @Value(value = "${server.port}")
+    @Autowired
+    private PaymentService paymentService;
+
+    @Value("${server.port}")
     private String serverPort;
 
-    @RequestMapping(path = "/payment/zk", method = RequestMethod.GET)
-    public String paymentZk() {
-        log.info("进入paymentZk。。。端口号为：{}", serverPort);
-        return "springcloud with zookeeper:"+serverPort+"\t"+ UUID.randomUUID().toString();
+    @GetMapping("/get/{id}")
+    public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {
+        PaymentDTO paymentDTO = paymentService.getPaymentById(id);
+        return CommonResult.success(paymentDTO, "ServerPort:" + serverPort);
     }
 
+    @PostMapping("/save")
+    public CommonResult<String> save(@RequestBody @Valid PaymentDTO paymentDTO) {
+        String message = paymentService.save(paymentDTO);
+        return StringUtils.hasText(message) ? CommonResult.fail(message) : CommonResult.success("ServerPort:" + serverPort);
+    }
 }
 ```
 
-（6）测试
+##### （6）测试
 
 启动Payment8084ZkStarter服务，在linux上查看zookeeper的服务信息
 
-![image-20210220234417336](https://i.loli.net/2021/02/23/Bn6hl5LEDdb9cjC.png)
+![image-20220611225000762](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611225000.png)
+
+##### （7）总结
+
+当8004宕机时，查看zookeeper注册中心的情况，再次重启观察对应的实例名称。
+
+![image-20220611225405184](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611225405.png)
+
+==zookeeper的服务节点是临时节点（CP）==
 
 
-
-测试业务：
-
-访问 http://localhost:8084/payment/zk
-
-![image-20210220235214185](https://i.loli.net/2021/02/23/Yig3emO2t5hdKQE.png)
 
 #### 2. 创建一个消费者cloud-consumerzk-order80
 
-（1）建module
+##### （1）建module
 
-（2）改pom：和8084一致即可
+##### （2）改pom，模仿消费者80，把注册中心dependency改成zk
 
-（3）改yml
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+</dependency>
+```
+
+##### （3）改yml
 
 ```yml
 server:
@@ -1347,89 +1255,65 @@ server:
 
 spring:
   application:
-    name: cloud-consumer-order
+    name: cloud-order-service
+
   cloud:
     zookeeper:
-      connect-string: 192.168.118.128:2181
+      connect-string: 192.168.137.110:2181
 ```
 
-（4）启动类
+##### （4）启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
 @SpringBootApplication
 @EnableDiscoveryClient
-public class Order80ZKStarter {
+public class ConsumerOrderZK80Starter {
     public static void main(String[] args) {
-        SpringApplication.run(Order80ZKStarter.class, args);
+        SpringApplication.run(ConsumerOrderZK80Starter.class, args);
     }
 }
 ```
 
-（5）业务代码
+##### （5）业务代码
 
 消费者消费服务提供者，通过RestTemplate进行信息交互，所以先要引入RestTemplate
 
-```java
-package com.ityj.springcloud.config;
-
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
-
-@Configuration
-public class ApplicationContextConfig {
-
-    @Bean
-    @LoadBalanced
-    public RestTemplate getRestTemplate() {
-        return new RestTemplate();
-    }
-
-}
-```
+和另一个80保持一致，改了一下路径
 
 ```java
-package com.ityj.springcloud.controller;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
-
 @RestController
 @Slf4j
 public class OrderController {
 
-    private static final String PAYMENT_URL = "http://cloud-provider-payment";
-
     @Autowired
     private RestTemplate restTemplate;
 
-    @GetMapping(path = "/consumer/payment/zk")
-    public String paymentGet() {
-        log.info("进入paymentGet()...");
-        return restTemplate.getForObject(PAYMENT_URL + "/payment/zk", String.class);
+    private static final String PAYMENT_URL = "http://cloud-payment-service/";   // zookeeper注意大小写
+
+    @GetMapping("/consumer/zk/payment/get/{id}")
+    public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {
+        return restTemplate.getForObject(PAYMENT_URL + "zk/payment/get/" + id, CommonResult.class);
+    }
+
+    @GetMapping("/consumer/zk/payment/save")
+    public CommonResult<String> save(PaymentDTO paymentDTO) {
+        log.info("Save: {}", paymentDTO);
+        return restTemplate.postForObject(PAYMENT_URL + "zk/payment/save", paymentDTO, CommonResult.class);
     }
 }
 ```
 
-（6）测试
+##### （6）测试
 
-启动80，看zookeeper是否已经注册了80服务
+启动80，看到zookeeper已经注册了80服务
 
-![image-20210220235522572](D:\我的文件\gitRepository\cloud-image\img\E6dPSGpngUBlvaQ.png)
+![image-20220611231209323](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611231209.png)
 
-再访问业务代码http://localhost/consumer/payment/zk
+再访问业务代码http://localhost/consumer/zk/payment/get/1
 
-![image-20210220235605041](D:\我的文件\gitRepository\cloud-image\img\image-20210220235605041.png)
+![image-20220611232447627](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611232447.png)
+
+
 
 ### 三、服务注册与发现进consul
 
@@ -5621,4 +5505,37 @@ seata-order-service2001模块
 > 原因是把spring-boot-devtools依赖放到commons模块。但是加了一个 <optional>true</optional>去掉就可以了。
 
 ==<optional>true</optional>表示两个项目之间依赖不传递；不设置optional或者optional是false，表示传递依赖。==
+
+## 5、在zookeeper作为服务注册中心时，servicename大小写必须和配置文件中保持一致
+
+```shell
+{"code":-1,"msg":"java.lang.IllegalStateException: No instances available for CLOUD-PAYMENT-SERVICE","data":null}
+```
+
+> org.springframework.cloud.client.discovery.DiscoveryClient#getInstances
+
+对于zookeeper，大小写敏感
+
+```java
+public ZookeeperDependency getDependencyForAlias(final String alias) {
+    for (Map.Entry<String, ZookeeperDependency> zookeeperDependencyEntry : this.dependencies
+         .entrySet()) {
+        if (zookeeperDependencyEntry.getKey().equals(alias)) {
+            return zookeeperDependencyEntry.getValue();
+        }
+    }
+    return null;
+}
+```
+
+对于eureka，大小写不敏感
+
+```java
+public List<InstanceInfo> getInstancesByVirtualHostName(String virtualHostName) {
+    return Optional.ofNullable(this.virtualHostNameAppMap.get(virtualHostName.toUpperCase(Locale.ROOT)))
+        .map(VipIndexSupport::getVipList)
+        .map(AtomicReference::get)
+        .orElseGet(Collections::emptyList); 
+}
+```
 

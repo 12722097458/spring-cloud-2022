@@ -13,7 +13,7 @@ import javax.validation.Valid;
 
 @Slf4j
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/zk/payment")
 public class PaymentController {
 
     @Autowired
