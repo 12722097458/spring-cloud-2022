@@ -217,7 +217,7 @@ cloud-provider-payment8001生产者
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-actuator</artifactId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <dependency>
@@ -496,7 +496,7 @@ public class PaymentController {
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-actuator</artifactId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <dependency>
@@ -1315,13 +1315,13 @@ public class OrderController {
 
 
 
-### 三、服务注册与发现进consul
+## 三、服务注册与发现进consul
 
 https://www.consul.io/intro/index.html  官网地址
 
 https://www.springcloud.cc/spring-cloud-consul.html   使用教程
 
-#### 1、下载并安装consul
+### 1、下载并安装consul
 
 1.1 在官网下载consul_1.9.3_linux_amd64.zip
 
@@ -1345,7 +1345,21 @@ https://www.springcloud.cc/spring-cloud-consul.html   使用教程
 
 出现页面表示安装成功，如果页面打不开，记着关闭防火墙重试。
 
-#### 2、创建服务提供者，并入驻consul
+
+
+**使用docker安装consul(使用中)**
+
+```shell
+docker pull consul:latest
+
+docker run -d --name consul-dev -p 8500:8500 consul:latest
+```
+
+![image-20220612101037615](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612101044.png)
+
+
+
+### 2、创建服务提供者，并入驻consul
 
 1.1 建module
 
@@ -1359,63 +1373,46 @@ https://www.springcloud.cc/spring-cloud-consul.html   使用教程
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-providerconsul-payment8006</artifactId>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-consul-discovery -->
+        <dependency>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!--当前模块测试consul作为服务注册中心-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-consul-discovery</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.ityj.springcloud</groupId>
-            <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-
 
     </dependencies>
 
@@ -1430,30 +1427,32 @@ server:
 
 spring:
   application:
-    name: consul-provider-payment
+    name: cloud-payment-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.137.110:3306/db_cloud?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+
   cloud:
     consul:
-      host: 192.168.118.128
+      host: 192.168.137.110
       port: 8500
       discovery:
         service-name: ${spring.application.name}
+        prefer-ip-address: true
+        ip-address: 192.168.1.8
 ```
 
 1.4 启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
 @SpringBootApplication
+@MapperScan("com.ityj.springcloud.mapper")
 @EnableDiscoveryClient
-public class ConsulPayment8006Starter {
-
+public class Payment8006Starter {
     public static void main(String[] args) {
-        SpringApplication.run(ConsulPayment8006Starter.class, args);
+        SpringApplication.run(Payment8006Starter.class, args);
     }
 }
 ```
@@ -1461,47 +1460,46 @@ public class ConsulPayment8006Starter {
 1.5 业务编写
 
 ```java
-package com.ityj.springcloud.controller;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
-
-@RestController
 @Slf4j
+@RestController
+@RequestMapping("/consul/payment")
 public class PaymentController {
 
-    @Value(value = "${server.port}")
+    @Autowired
+    private PaymentService paymentService;
+
+    @Value("${server.port}")
     private String serverPort;
 
-    @RequestMapping(path = "/payment/consul", method = RequestMethod.GET)
-    public String paymentConsul() {
-        log.info("paymentConsul()。。。端口号为：{}", serverPort);
-        return "springcloud with consul:" + serverPort + "\t" + UUID.randomUUID().toString();
+    @GetMapping("/get/{id}")
+    public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {
+        PaymentDTO paymentDTO = paymentService.getPaymentById(id);
+        return CommonResult.success(paymentDTO, "ServerPort:" + serverPort);
     }
 
+    @PostMapping("/save")
+    public CommonResult<String> save(@RequestBody @Valid PaymentDTO paymentDTO) {
+        String message = paymentService.save(paymentDTO);
+        return StringUtils.hasText(message) ? CommonResult.fail(message) : CommonResult.success("ServerPort:" + serverPort);
+    }
 }
 ```
 
 1.6 测试
 
-启动ConsulPayment8006Starter服务
+启动Payment8006Starter服务
 
-访问http://192.168.118.128:8500
+访问http://192.168.137.110:8500
 
-![image-20210221103655773](D:\我的文件\gitRepository\cloud-image\img\image-20210221103655773.png)
+![image-20220612112225577](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612112225.png)
 
-访问http://localhost:8006/payment/consul
+访问http://localhost:8006/consul/payment/get/1
 
-![image-20210221103823808](D:\我的文件\gitRepository\cloud-image\img\image-20210221103823808.png)
+![image-20220612112306505](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612112306.png)
 
 
 
-#### 3、创建消费者，并入驻consul
+### 3、创建消费者，并入驻consul
 
 1.1 建module
 
@@ -5537,5 +5535,31 @@ public List<InstanceInfo> getInstancesByVirtualHostName(String virtualHostName) 
         .map(AtomicReference::get)
         .orElseGet(Collections::emptyList); 
 }
+```
+
+
+
+## 6、commons模块里引入了actuator的依赖，但是子项目无法访问/actuator/health。 一直404
+
+原因是父项目的依赖添加错误。没有添加成starter...
+
+原来：
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-actuator</artifactId>
+</dependency>
+```
+
+
+
+==正确的是：==
+
+```xml
+ <dependency>
+     <groupId>org.springframework.boot</groupId>
+     <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
 ```
 
