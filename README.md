@@ -2,7 +2,8 @@
 Learning Spring Cloud 
 
 项目依赖：
-1、Mysql
+
+# 1、Mysql
 
 ```shell
 需要启动：Linux(192.168.137.110):root/root，mysql是直接安装在centos上，开机自启的。
@@ -10,7 +11,7 @@ Learning Spring Cloud
 
 
 
-2、zookeeper
+# 2、zookeeper
 
 ```shell
 通过docker安装并启动。
@@ -20,7 +21,9 @@ docker start zookeeper-standalone
 
 
 
-3、consul
+# 3、consul
+
+本机IP：192.168.1.8
 
 ```shell
 通过docker安装并启动。
