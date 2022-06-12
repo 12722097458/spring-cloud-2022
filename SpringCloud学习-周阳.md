@@ -1361,11 +1361,11 @@ docker run -d --name consul-dev -p 8500:8500 consul:latest
 
 ### 2、创建服务提供者，并入驻consul
 
-1.1 建module
+#### 1.1 建module
 
 新建Module支付服务provider8006
 
-1.2 改pom
+#### 1.2 改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1419,7 +1419,7 @@ docker run -d --name consul-dev -p 8500:8500 consul:latest
 </project>
 ```
 
-1.3 改yml
+#### 1.3 改yml
 
 ```yml
 server:
@@ -1427,7 +1427,7 @@ server:
 
 spring:
   application:
-    name: cloud-payment-service
+    name: cloud-consul-payment-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.137.110:3306/db_cloud?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
@@ -1444,7 +1444,7 @@ spring:
         ip-address: 192.168.1.8
 ```
 
-1.4 启动类
+#### 1.4 启动类
 
 ```java
 @SpringBootApplication
@@ -1457,7 +1457,7 @@ public class Payment8006Starter {
 }
 ```
 
-1.5 业务编写
+#### 1.5 业务编写
 
 ```java
 @Slf4j
@@ -1485,13 +1485,13 @@ public class PaymentController {
 }
 ```
 
-1.6 测试
+#### 1.6 测试
 
 启动Payment8006Starter服务
 
 访问http://192.168.137.110:8500
 
-![image-20220612112225577](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612112225.png)
+![image-20220612113328045](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612113328.png)
 
 访问http://localhost:8006/consul/payment/get/1
 
@@ -1501,70 +1501,131 @@ public class PaymentController {
 
 ### 3、创建消费者，并入驻consul
 
-1.1 建module
+#### 1.1 建module
 
 新建Module消费服务cloud-consumerconsul-order80
 
-1.2 改pom
+#### 1.2 改pom
 
-和provider8006一致
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>spring-cloud-2022</artifactId>
+        <groupId>com.ityj.springcloud</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
 
-1.3 改yml
+    <artifactId>cloud-consumerconsul-order80</artifactId>
 
-和provider8006一致，修改端口号为80
+    <dependencies>
+        <dependency>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
-1.4 启动类
+        <!--作为consul测试的消费者-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-consul-discovery</artifactId>
+        </dependency>
+    </dependencies>
+</project>
+```
 
-一致
+#### 1.3 改yml
 
-1.5 业务编写
+```yml
+server:
+  port: 80
+
+spring:
+  application:
+    name: cloud-consul-order-service
+
+  cloud:
+    consul:
+      host: 192.168.137.110
+      port: 8500
+      discovery:
+        service-name: ${spring.application.name}
+        prefer-ip-address: true
+        ip-address: 192.168.1.8
+```
+
+
+
+#### 1.4 启动类
 
 ```java
-package com.ityj.springcloud.controller;
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ConsumerOrderConsul80Starter {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerOrderConsul80Starter.class, args);
+    }
+}
+```
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+#### 1.5 业务编写
 
+```java
 @RestController
 @Slf4j
-public class OrderConsulController {
-
-    private static final String PAYMENT_URL = "http://consul-provider-payment";
+public class OrderController {
 
     @Autowired
     private RestTemplate restTemplate;
 
-    @GetMapping(path = "/consumer/payment/consul")
-    public String paymentGet() {
-        log.info("进入paymentGet()...");
-        return restTemplate.getForObject(PAYMENT_URL + "/payment/consul", String.class);
+    private static final String PAYMENT_URL = "http://cloud-consul-payment-service/";
+
+    @GetMapping("/consumer/consul/payment/get/{id}")
+    public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {
+        return restTemplate.getForObject(PAYMENT_URL + "consul/payment/get/" + id, CommonResult.class);
     }
 
+    @GetMapping("/consumer/consul/payment/save")
+    public CommonResult<String> save(PaymentDTO paymentDTO) {
+        log.info("Save: {}", paymentDTO);
+        return restTemplate.postForObject(PAYMENT_URL + "consul/payment/save", paymentDTO, CommonResult.class);
+    }
 }
+
 ```
 
-1.6 测试
+#### 1.6 测试
 
-![image-20210221103916954](D:\我的文件\gitRepository\cloud-image\img\image-20210221103916954.png)
+![image-20220612113523370](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612113523.png)
 
-访问http://localhost/consumer/payment/consul
+访问http://localhost/consumer/consul/payment/get/1
 
-![image-20210221104021291](D:\我的文件\gitRepository\cloud-image\img\image-20210221104021291.png)
+![image-20220612113606255](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612113606.png)
 
-#### 4、eureka、zookeeper以及consul异同点比较
+#### 1.7 Consul总结
+
+==CP，强一致性和分区容错性。==
+
+当某个服务宕机，一定时间未收到心跳响应，直接剔除。
+
+### 4、eureka、zookeeper以及consul异同点比较
 
 CAP：分布式系统有三个指标。CAP理论关注粒度是数据，而不是整体系统设计的策略
 
 * C：Consistency(强一致性)
 * A：Availability(可用性)
-* P：Partition tolerance(分区容错)
+* P：Partition tolerance(分区容错)：基本都需要满足
 
-1. zookeeper只有一个客户端，没有UI页面。
-2. eureka强调AP，保证服务能正常运行。当某一个服务宕机时，并不会立即将其注册信息删除。
+![image-20220612115001174](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612115001.png)
+
+1. eureka强调AP，保证服务能正常运行。当某一个服务宕机时，并不会立即将其注册信息删除。好死不如赖活
+2. zookeeper只有一个客户端，没有UI页面。
 3. zookeeper和consul针对CP。
+
+
 
 ### 四、服务调用Ribbon,Feign
 
