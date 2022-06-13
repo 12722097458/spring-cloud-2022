@@ -1611,7 +1611,7 @@ public class OrderController {
 
 当某个服务宕机，一定时间未收到心跳响应，直接剔除。
 
-### 4、eureka、zookeeper以及consul异同点比较
+## 四、eureka、zookeeper以及consul异同
 
 CAP：分布式系统有三个指标。CAP理论关注粒度是数据，而不是整体系统设计的策略
 
@@ -1627,9 +1627,9 @@ CAP：分布式系统有三个指标。CAP理论关注粒度是数据，而不�
 
 
 
-### 四、服务调用Ribbon,Feign
+## 五、服务调用Ribbon,Feign
 
-#### 一、Spring Cloud Ribbon
+#### 1、Spring Cloud Ribbon
 
 > Spring Cloud Ribbon是基于Netflix Ribbon实现的一套客户端负载均衡工具。
 >
@@ -1668,7 +1668,7 @@ eureka依赖已经引入可Ribbon，所以加入@LoadBalancer可以实现默认�
 
 
 
-##### 1、Ribbon的负载规则替换
+##### （1）Ribbon的负载规则替换
 
 Ribbon核心组件IRule：根据特定算法从服务列表中选取一个要访问的服务
 
@@ -1676,7 +1676,7 @@ Ribbon核心组件IRule：根据特定算法从服务列表中选取一个要访
 
 修改order80的负载规则：访问消费者的controller时，默认对服务提供者payment8081和8082是轮询使用。现在改为随机方式，
 
-（1）写配置。
+###### （1）写配置。
 
 这里要求不配置文件不能被SpringBoot的@ComponetScan扫描到，否则自定义的这个配置类就会被所有的Ribbon客户端共享，达不到特殊定制化的目的。（ssssss）
 
@@ -1700,15 +1700,15 @@ public class MyRandomRule {
 }
 ```
 
-（2）改启动类
+###### （2）改启动类
 
 ```java
 @RibbonClient(name = "CLOUD-PAYMENT-SERVICE", configuration = MyRandomRule.class)   //修改其负载规则
 ```
 
-（3）启动服务，进行测试
+###### （3）启动服务，进行测试
 
-http://localhost/consumer/payment/getForEntity/10
+http://localhost/consumer/payment/get/1
 
 多次访问，对应端口随机改变。表明切换成功。
 
@@ -1720,7 +1720,7 @@ IRule --> AbstractLoadBalancerRule --> RoundRobinRule(默认的轮询机制)  --
 
 
 
-#### 二、Feign和Open Feign
+#### 2、Feign和Open Feign
 
 什么是Feign？
 
@@ -1732,11 +1732,11 @@ IRule --> AbstractLoadBalancerRule --> RoundRobinRule(默认的轮询机制)  --
 
 ##### 1、Open Feign使用步骤
 
-（1）建module
+###### （1）建module
 
 建一个cloud-consumer-openfeign-order80的module
 
-（2）改pom
+###### （2）改pom
 
 这里主要是多了一个`spring-cloud-starter-openfeign`的坐标。包含了ribbon的依赖
 
@@ -1746,154 +1746,118 @@ IRule --> AbstractLoadBalancerRule --> RoundRobinRule(默认的轮询机制)  --
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-consumer-openfeign-order80</artifactId>
 
-    <!--openfeign-->
     <dependencies>
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
+        <!--通过openfeign实现对payment生产者的http调用-->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
     </dependencies>
+
+
 </project>
 ```
 
-（3）写yml
+###### （3）写yml
 
 ```yml
 server:
   port: 80
+
+spring:
+  application:
+    name: cloud-openfeign-order-service
+
 eureka:
   client:
-    register-with-eureka: false
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://eureka7001.com:7001/eureka, http://eureka7002.com:7002/eureka
-
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka #集群版
 ```
 
-（4）启动类
+###### （4）启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-
 @SpringBootApplication
-@EnableFeignClients     // 支持open feign
-public class OpenFeignOrder80 {
+@EnableEurekaClient
+@EnableFeignClients   // openfeign
+public class ConsumerOpenFeignOrder80Starter {
     public static void main(String[] args) {
-        SpringApplication.run(OpenFeignOrder80.class, args);
+        SpringApplication.run(ConsumerOpenFeignOrder80Starter.class, args);
     }
-
 }
 ```
 
-（5）编写业务代码
+###### （5）编写业务代码
 
 1. 新建PaymentFeignService接口并新增注解@FeignClient(value = "CLOUD-PAYMENT-SERVICE")
 
 2. 将服务提供者8081的controller声明复制过来，当做接口
 
    ```java
-   @FeignClient(value = "CLOUD-PAYMENT-SERVICE")    //业务逻辑接口+@FeignClient配置调用provider服务
+   @Component
+   @FeignClient(value = "CLOUD-PAYMENT-SERVICE")
    public interface PaymentFeignService {
    
-       @RequestMapping(path = "/payment/getPayment/{id}", method = RequestMethod.GET)
-       CommonResult<Payment> getPaymentById(@PathVariable(value = "id") long id);
+       @GetMapping("/payment/get/{id}")
+       CommonResult<PaymentDTO> getById(@PathVariable("id") Long id);
    
-       @GetMapping(path = "/consumer/payment/getPort")
-       String getPort();
-   
+       @PostMapping("/payment/save")
+       CommonResult<String> save(@RequestBody @Valid PaymentDTO paymentDTO);
    }
    ```
 3. 编写controller，调用PaymentFeignService接口。
 
 ```java
-package com.ityj.springcloud.controller;
-
-import com.ityj.springcloud.entity.model.CommonResult;
-import com.ityj.springcloud.entity.po.PaymentPO;
-import com.ityj.springcloud.service.PaymentFeignService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 @RestController
+@RequestMapping("/openfeign")
 @Slf4j
-public class OpenFeignConsumerOrderController {
+public class OrderFeignController {
 
     @Autowired
     private PaymentFeignService paymentFeignService;
 
-    @RequestMapping(path = "/consumer/payment/getPayment/{id}", method = RequestMethod.GET)
-    public CommonResult<Payment> getPaymentById(@PathVariable(value = "id") long id) {
-        return paymentFeignService.getPaymentById(id);
+    @GetMapping("/consumer/payment/get/{id}")
+    public CommonResult<PaymentDTO> getById(@PathVariable("id") Long id) {
+        return paymentFeignService.getById(id);
     }
 
-    @GetMapping(path = "/consumer/payment/getPort")
-    String getPort() {
-        return paymentFeignService.getPort();
+    @GetMapping("/consumer/payment/save")
+    public CommonResult<String> save(PaymentDTO paymentDTO) {
+        return paymentFeignService.save(paymentDTO);
     }
-
-
 }
 ```
 
-4. 测试
+###### （6）测试
 
-启动7001,7002,8081,8082以及feign80
+启动7001,7002,7003,8081,8082以及feign80
 
-http://localhost/consumer/payment/getPayment/23
+http://localhost/openfeign/consumer/payment/get/1
 
 结果成功显示，并且端口交替返回，表示ribbon的负载均衡已生效。
 
-5. 总结
+###### （7）总结
 
 * 启动类上要标明开启OpenFeign注解`@EnableFeignClients`
 * 自定义的service接口，需要标明`@FeignClient(value = "CLOUD-PAYMENT-SERVICE") `
