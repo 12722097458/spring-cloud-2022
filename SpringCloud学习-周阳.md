@@ -1887,38 +1887,20 @@ feign:
 （1）添加配置文件
 
 ```java
-package com.ityj.springcloud.config;
-
-import feign.Logger;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
 public class FeignConfig {
 
     @Bean
-    Logger.Level feignLoggerLevel() {
+    public Logger.Level loggerLevel() {
         return Logger.Level.FULL;
     }
+
 }
 ```
 
 （2）修改yml
 
 ```yml
-server:
-  port: 80
-eureka:
-  client:
-    register-with-eureka: false
-    service-url:
-      defaultZone: http://eureka7001.com:7001/eureka, http://eureka7002.com:7002/eureka
-
-ribbon:
-  ReadTimeout:  5000
-  ConnectTimeout: 5000
-
-
 logging:
   level:
     com.ityj.springcloud.service.PaymentFeignService: debug
@@ -1926,7 +1908,7 @@ logging:
 
 （3）结果
 
-![image-20210221230102399](D:\我的文件\gitRepository\cloud-image\img\image-20210221230102399.png)
+![image-20220618102137428](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220618102144.png)
 
 
 
