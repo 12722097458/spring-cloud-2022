@@ -20,4 +20,7 @@ public interface PaymentFeignService {
 
     @PostMapping("/payment/save")
     CommonResult<String> save(@RequestBody @Valid PaymentDTO paymentDTO);
+
+    @GetMapping("/payment/timeout")
+    CommonResult<String> timeout();
 }

@@ -1627,7 +1627,7 @@ CAP：分布式系统有三个指标。CAP理论关注粒度是数据，而不�
 
 
 
-## 五、服务调用Ribbon,Feign
+## 五、服务调用Ribbon & Feign
 
 #### 1、Spring Cloud Ribbon
 
@@ -1872,9 +1872,12 @@ http://localhost/openfeign/consumer/payment/get/1
 添加
 
 ```
-ribbon:
-  ReadTimeout:  5000
-  ConnectTimeout: 5000
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000         # 设置feign调用producer的最大超时时间
+        readTimeout: 5000
 ```
 
 

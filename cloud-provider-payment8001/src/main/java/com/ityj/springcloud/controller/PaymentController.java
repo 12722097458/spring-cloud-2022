@@ -3,6 +3,7 @@ package com.ityj.springcloud.controller;
 import com.ityj.springcloud.entity.dto.PaymentDTO;
 import com.ityj.springcloud.entity.model.CommonResult;
 import com.ityj.springcloud.service.PaymentService;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -49,6 +51,13 @@ public class PaymentController {
             log.info(x.getUri().toString());
         });
         return CommonResult.success(discoveryClient);
+    }
+
+    @SneakyThrows
+    @GetMapping("/timeout")
+    public CommonResult<String> timeout() {
+        TimeUnit.MILLISECONDS.sleep(1500);
+        return CommonResult.success();
     }
 
 }

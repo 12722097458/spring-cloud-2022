@@ -27,4 +27,9 @@ public class OrderFeignController {
     public CommonResult<String> save(PaymentDTO paymentDTO) {
         return paymentFeignService.save(paymentDTO);
     }
+
+    @GetMapping("/consumer/payment/timeout")
+    public CommonResult<String> timeout() {
+        return paymentFeignService.timeout();
+    }
 }
