@@ -1912,13 +1912,11 @@ logging:
 
 
 
-### 五、服务降级Hystrix
+## 六、服务降级Hystrix
 
 分布式系统面临的问题：
 
 复杂分布式结构中的应用程序有多个依赖关系，每个依赖关系在调用的时候不可避免会出现失败的情况，如果不妥善处理，就可能出现''雪崩''严重后果。
-
-
 
 #### 1、Hystrix介绍
 
@@ -1940,58 +1938,24 @@ logging:
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-provider-hystrix-payment8001</artifactId>
 
     <dependencies>
-
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
-        <!--新增hystrix-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -2007,32 +1971,25 @@ server:
 spring:
   application:
     name: cloud-provider-hystrix-payment
-  #    eviction-interval-timer-in-ms: 2000
 
 eureka:
   client:
-    register-with-eureka: true    #表示向注册中心注册自己
-    fetch-registry: true   #表示自己就是注册中心，职责是维护服务实例，并不需要去检索服务
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      # defaultZone: http://eureka7002.com:7002/eureka/    #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址
-      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
-#  server:
-#    enable-self-preservation: false
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka  #集群版
+
+  instance:
+    instance-id: payment8001
+    prefer-ip-address: true
 ```
 
 （4）启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
-
 @SpringBootApplication
 @EnableEurekaClient
 public class PaymentHystrix8001Starter {
-
     public static void main(String[] args) {
         SpringApplication.run(PaymentHystrix8001Starter.class, args);
     }
@@ -2044,77 +2001,63 @@ public class PaymentHystrix8001Starter {
 service中包含两个方法：一个是直接返回入参，几乎不耗时；另一个是休眠一定时间再返回入参，会等待一定时间。
 
 ```java
-package com.ityj.springcloud.service;
-
-import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
-
 @Service
-public class PaymentService {
+public class PaymentServiceImpl implements PaymentService {
 
-    public String paymentInfo_OK(Integer id) {
-        return "线程池：" + Thread.currentThread().getName() + "   paymentInfo_OK,id：  " + id + "\t" + "O(∩_∩)O"  ;
+    @Override
+    public String success(Long id) {
+        return Thread.currentThread().getName() + "-success-" + id;
     }
 
-    public String paymentInfo_timeout(Integer id) {
-        int sleepSeconds = 3;
-        try {
-            TimeUnit.SECONDS.sleep(sleepSeconds);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return "线程池：" + Thread.currentThread().getName() + "   paymentInfo_timeout,id：  " + id + "sleep时间（秒）：" + sleepSeconds;
+    @SneakyThrows
+    @Override
+    public String timeout(Long id) {
+        long time = 3;
+        TimeUnit.SECONDS.sleep(time);
+        return Thread.currentThread().getName() + "-timeout:" + time + "-" + id;
     }
 }
+
 ```
 
 ```java
-package com.ityj.springcloud.controller;
-
-import com.ityj.springcloud.service.PaymentService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-
 @RestController
+@RequestMapping("/payment")
 @Slf4j
 public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping(path = "/payment/ok/{id}")
-    public String paymentInfo_OK(@PathVariable(value = "id") Integer id) {
-        log.info("进入paymentInfo_OK，入参id = {}", id);
-        return paymentService.paymentInfo_OK(id);
+    @GetMapping("/success/{id}")
+    public CommonResult<String> success(@PathVariable("id") Long id) {
+        String result = paymentService.success(id);
+        log.info(result);
+        return CommonResult.success(result);
     }
 
-    @GetMapping(path = "/payment/timeout/{id}")
-    public String paymentInfo_timeout(@PathVariable(value = "id") Integer id) {
-        log.info("进入paymentInfo_timeout，入参id = {}", id);
-        return paymentService.paymentInfo_timeout(id);
+    @GetMapping("/timeout/{id}")
+    public CommonResult<String> timeout(@PathVariable("id") Long id) {
+        String result = paymentService.timeout(id);
+        log.info(result);
+        return CommonResult.success(result);
     }
-
 }
-
 ```
 
 （6）测试
 
-启动 7001， 7002，cloud-provider-hystrix-payment8001
+启动 7001， 7002，7003, cloud-provider-hystrix-payment8001
 
 访问Eureka：http://localhost:7001/，看到8001已经注册进去
 
-![image-20210222094154923](D:\我的文件\gitRepository\cloud-image\img\image-20210222094154923.png)
+![image-20220619160033493](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160040.png)
 
-访问 http://localhost:8001/payment/ok/1
+访问  [localhost:8001/payment/timeout/312](http://localhost:8001/payment/timeout/312)
 
- http://localhost:8001/payment/timeout/1
+ [localhost:8001/payment/success/312](http://localhost:8001/payment/success/312)
 
-可以正常运行
+都可以正常运行
 
 利用JMeter测试高并发情况：
 
@@ -2126,19 +2069,15 @@ public class PaymentController {
 
 * 下载后进行解压，解压完成即可
 
-* 需要配置JAVA的环境变量（省略）
-
-* 配置jmeter的环境变量
-
-  ![image-20210222121848226](D:\我的文件\gitRepository\cloud-image\img\image-20210222121848226.png)
-
 * 鼠标左键双击bin目录下 jmeter.bat或ApacheJMeter.jar进行启动
+
+  ![image-20220619160723910](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160724.png)
 
 * 配置一个连接进行高并发模拟：一组200个线程，执行100次
 
-  ![image-20210222123225351](D:\我的文件\gitRepository\cloud-image\img\image-20210222123225351.png)
+  ![image-20220619160744081](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160744.png)
 
-  ![image-20210222123313349](D:\我的文件\gitRepository\cloud-image\img\image-20210222123313349.png)
+  ![image-20220619160757119](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160757.png)
 
 **测试最后发现，当paymentInfo_timeout进行高并发调用时，也会影响到paymentInfo_OK接口效率。**
 
@@ -2156,9 +2095,9 @@ public class PaymentController {
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -2168,52 +2107,20 @@ public class PaymentController {
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
-        <!--新增hystrix-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
+        <!--通过openfeign实现对payment生产者的http调用-->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
     </dependencies>
-
 </project>
 ```
 
@@ -2223,38 +2130,34 @@ public class PaymentController {
 server:
   port: 80
 
-eureka:
-  client:
-    register-with-eureka: true    #表识不向注册中心注册自己
-    fetch-registry: true   #表示自己就是注册中心，职责是维护服务实例，并不需要去检索服务
-    service-url:
-      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
-
 spring:
   application:
-    name: cloud-consumer-hystrix-order
+    name: cloud-openfeign-order-service
 
-ribbon:
-  ReadTimeout:  5000
-  ConnectTimeout: 5000
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka  #集群版
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000         # 设置feign调用producer的最大超时时间
+        readTimeout: 5000
 ```
 
 （4）启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-
 @SpringBootApplication
-@EnableFeignClients
 @EnableEurekaClient
-public class HystrixOrder80Starter {
+@EnableFeignClients
+public class ConsumerOrderHystrix80Starter {
     public static void main(String[] args) {
-        SpringApplication.run(HystrixOrder80Starter.class, args);
+        SpringApplication.run(ConsumerOrderHystrix80Starter.class, args);
     }
 }
 ```
@@ -2264,21 +2167,15 @@ public class HystrixOrder80Starter {
 接口编写
 
 ```java
-package com.ityj.springcloud.service;
-
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
 @Component
-@FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT")
-public interface OrderService {
-    @GetMapping(path = "/payment/ok/{id}")
-    String paymentInfo_OK(@PathVariable(value = "id") Integer id);
+@FeignClient(value = "cloud-provider-hystrix-payment")
+public interface PaymentFeignService {
 
-    @GetMapping(path = "/payment/timeout/{id}")
-    String paymentInfo_timeout(@PathVariable(value = "id") Integer id);
+    @GetMapping("/payment/success/{id}")
+    CommonResult<String> success(@PathVariable("id") Long id);
+
+    @GetMapping("/payment/timeout/{id}")
+    CommonResult<String> timeout(@PathVariable("id") Long id);
 }
 ```
 
@@ -2286,39 +2183,41 @@ public interface OrderService {
 
 ```java
 @RestController
+@RequestMapping("/hystrix")
 @Slf4j
-public class HysreixOrderController {
+public class OrderFeignController {
 
     @Autowired
-    private OrderService orderService;
+    private PaymentFeignService paymentFeignService;
 
-    @GetMapping(path = "/consumer/payment/ok/{id}")
-    public String paymentInfo_OK(@PathVariable(value = "id") Integer id) {
-        log.info("进入HysreixOrderController.paymentInfo_OK()...");
-        return orderService.paymentInfo_OK(id);
+    @GetMapping("/consumer/payment/success/{id}")
+    public CommonResult<String> success(@PathVariable("id") Long id) {
+        return paymentFeignService.success(id);
     }
 
-    @GetMapping(path = "/consumer/payment/timeout/{id}")
-    public String paymentInfo_timeout(@PathVariable(value = "id") Integer id) {
-        log.info("进入HysreixOrderController.paymentInfo_timeout()...");
-        return orderService.paymentInfo_timeout(id);
+    @GetMapping("/consumer/payment/timeout/{id}")
+    public CommonResult<String> timeout(@PathVariable("id") Long id) {
+        return paymentFeignService.timeout(id);
     }
 
 }
 ```
 
-调用http://localhost:8001/payment/ok/1，可以正常返回结果
 
-调用http://localhost/consumer/payment/timeout/1，发现readtimeout了，因为消费者调用8081用的是open feign，而open feign默认的超时时间是1秒
+
+调用[localhost/hystrix/consumer/payment/success/312](http://localhost/hystrix/consumer/payment/success/312)，正常访问。
+
+**注意：消费者调用8081用的是open feign，而open feign默认的超时时间是1秒**
 
 添加配置，即可正常访问了。
 
 ```yml
-ribbon:
-  #建立连接所用的时间，适用于网络状况正常的情况下，两端连接所需要的时间
-  ReadTimeout:  5000
-  #指建立连接后从服务端读取到可用资源所用的时间
-  ConnectTimeout: 5000
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000         # 设置feign调用producer的最大超时时间
+        readTimeout: 5000
 ```
 
 
