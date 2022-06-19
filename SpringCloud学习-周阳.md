@@ -2346,8 +2346,8 @@ public CommonResult<String> orderTimeoutHandler(Long id) {
 
 > ```java
 >@Component
-> @FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT")
-> public interface OrderService {}
+> @FeignClient(value = "cloud-provider-hystrix-payment")
+> public interface PaymentFeignService {
 > ```
 > 
 > 一个自定义的FeignClient接口，可以指向一个服务提供者，因此可以根据这个特点，对这个接口进行实现，完成定制化。避免和业务逻辑混一起。
@@ -2356,45 +2356,42 @@ public CommonResult<String> orderTimeoutHandler(Long id) {
 >
 > ```java
 >@Service
-> @Slf4j
-> public class HystrixOrderServiceImpl implements OrderService {
->  @Override
->  public String paymentInfo_OK(Integer id) {
->         log.info("进入了HystrixOrderServiceImpl.paymentInfo_OK()...进行错误处理。。。");
->         return "cloud-consumer-feign-hystrix-order80   --->   paymentInfo_OK方法出现问题，请稍后重试！";
->     }
->    
+> public class PaymentFallbackService implements PaymentFeignService {
 >     @Override
->  public String paymentInfo_timeout(Integer id) {
->         log.info("进入了HystrixOrderServiceImpl.paymentInfo_timeout()...进行错误处理。。。");
->         return "cloud-consumer-feign-hystrix-order80   --->   paymentInfo_timeout 方法出现问题，请稍后重试！";
+>     public CommonResult<String> success(Long id) {
+>         return CommonResult.fail("PaymentFallbackService.success()---> 进入了openfeign默认的兜底策略");
+>        }
+>    
+>        @Override
+>        public CommonResult<String> timeout(Long id) {
+>            return CommonResult.fail("PaymentFallbackService.timeout()---> 进入了openfeign默认的兜底策略");
 >     }
 >    }
 >    ```
-> 
-> （2）修改openfeign访问生产者的统一接口OrderService
->
+>    
+>    （2）修改openfeign访问生产者的统一接口OrderService
+>    
 > 添加fallback的属性。
->
-> ```java
->@Component
-> @FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT", fallback = HystrixOrderServiceImpl.class)  // fallback表明错误指向的方法
-> public interface OrderService {}
-> ```
+> 
+>```java
+> @Component
+>@FeignClient(value = "cloud-provider-hystrix-payment", fallback = PaymentFallbackService.class)
+> public interface PaymentFeignService {}
+>```
 > 
 > （3）确保配置文件yml开启了hystrix
->
+> 
 > ```yml
->feign:
-> hystrix:
->  enabled: true #如果处理自身的容错就开启。开启方式与生产端不一样。
->   ```
->    
+> feign:
+>    hystrix:
+>      	enabled: true #如果处理自身的容错就开启。开启方式与生产端不一样。
+>```
+> 
 > （4）启动相关服务器。进行测试。关闭8001或者在服务提供方制造错误，
->
-> 再次调用链接http://localhost/consumer/payment/ok/1，发现进入服务降级的方法。
->
->  ![image-20210222220536422](D:\我的文件\gitRepository\cloud-image\img\image-20210222220536422.png)
+>   
+>    再次调用链接[localhost/hystrix/consumer/payment/success/89465](http://localhost/hystrix/consumer/payment/success/89465)，发现进入服务降级的方法。
+> 
+>![image-20220619215826365](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619215826.png)
 
 
 
