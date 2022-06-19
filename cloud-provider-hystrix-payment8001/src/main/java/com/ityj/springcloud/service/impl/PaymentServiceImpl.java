@@ -32,4 +32,28 @@ public class PaymentServiceImpl implements PaymentService {
     public String timeoutHandler(Long id) {
         return Thread.currentThread().getName() + "-timeoutHandler: 程序繁忙，请稍后再试---" + id;
     }
+
+
+    /**
+     * 服务熔断
+     * @param id
+     * @return
+     */
+    @HystrixCommand(fallbackMethod = "circuitBreakHandler", commandProperties = {
+            @HystrixProperty(name = "circuitBreaker.enabled", value = "true"),  //是否开启断路器
+            @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"),   //请求次数
+            @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),  //时间范围
+            @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60") //失败率达到多少后跳闸
+    })
+    @Override
+    public String circuitBreak(Long id) {
+        if (id < 0) {
+            throw new RuntimeException("Id cannot less than zero!");
+        }
+        return Thread.currentThread().getName() + "-------" + id;
+    }
+
+    public String circuitBreakHandler(Long id) {
+        return "服务熔断后fallback---> circuitBreakHandler: 当前服务不可用，请稍等重试！id = " + id;
+    }
 }

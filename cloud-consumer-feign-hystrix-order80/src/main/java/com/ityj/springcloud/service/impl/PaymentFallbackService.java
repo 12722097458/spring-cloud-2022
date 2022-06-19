@@ -15,4 +15,9 @@ public class PaymentFallbackService implements PaymentFeignService {
     public CommonResult<String> timeout(Long id) {
         return CommonResult.fail("PaymentFallbackService.timeout()---> 进入了openfeign默认的兜底策略");
     }
+
+    @Override
+    public CommonResult<String> circuitBreak(Long id) {
+        return CommonResult.fail("PaymentFallbackService.circuitBreak()---> 进入了openfeign默认的兜底策略");
+    }
 }

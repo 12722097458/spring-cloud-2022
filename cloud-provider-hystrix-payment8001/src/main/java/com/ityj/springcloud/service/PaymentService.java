@@ -4,4 +4,5 @@ public interface PaymentService {
 
     String success(Long id);
     String timeout(Long id);
+    String circuitBreak(Long id);
 }

@@ -2404,57 +2404,70 @@ public CommonResult<String> orderTimeoutHandler(Long id) {
 1、修改cloud-provider-hystrix-payment8001，在PaymentService类中添加paymentCircuitBreaker方法以及其对应的异常服务降级（兜底）方法paymentCircuitBreaker_fallback
 
 ```java
-//服务熔断
-@HystrixCommand(fallbackMethod = "paymentCircuitBreaker_fallback",commandProperties = {
-        @HystrixProperty(name = "circuitBreaker.enabled",value = "true"),  //是否开启断路器
-        @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold",value = "10"),   //请求次数
-        @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds",value = "10000"),  //时间范围
-        @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage",value = "60"), //失败率达到多少后跳闸
+@HystrixCommand(fallbackMethod = "circuitBreakHandler", commandProperties = {
+            @HystrixProperty(name = "circuitBreaker.enabled", value = "true"),  //是否开启断路器
+            @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"),   //请求次数
+            @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),  //时间范围
+            @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60") //失败率达到多少后跳闸
 })
-public String paymentCircuitBreaker(@PathVariable("id") Integer id){
-    if (id < 0){
-        throw new RuntimeException("*****id 不能负数");
+@Override
+public String circuitBreak(Long id) {
+    if (id < 0) {
+        throw new RuntimeException("Id cannot less than zero!");
     }
-    String serialNumber = IdUtil.simpleUUID();
-
-    return Thread.currentThread().getName()+"\t"+"调用成功,流水号："+serialNumber;
+    return Thread.currentThread().getName() + "-------" + id;
 }
-public String paymentCircuitBreaker_fallback(@PathVariable("id") Integer id){
-    return "id 不能负数，请稍候再试,(┬＿┬)/~~     id: " +id;
+
+public String circuitBreakHandler(Long id) {
+    return "服务熔断后fallback---> circuitBreakHandler: 当前服务不可用，请稍等重试！id = " + id;
 }
 ```
 
 2、 添加对应的controller调用接口
 
 ```java
-//===服务熔断
-@GetMapping("/payment/circuit/{id}")
-public String paymentCircuitBreaker(@PathVariable("id") Integer id){
-    String result = paymentService.paymentCircuitBreaker(id);
-    log.info("*******result:"+result);
-    return result;
+@GetMapping("/consumer/payment/circuitBreak/{id}")
+public CommonResult<String> circuitBreak(@PathVariable("id") Long id) {
+    return paymentFeignService.circuitBreak(id);
 }
 ```
 
-3、测试服务熔断
+3、启动类添加注解
+
+```java
+@SpringBootApplication
+@EnableEurekaClient
+@EnableCircuitBreaker  // 开启服务熔断
+public class PaymentHystrix8001Starter {
+    public static void main(String[] args) {
+        SpringApplication.run(PaymentHystrix8001Starter.class, args);
+    }
+}
+```
+
+4、检查配置文件(80)
+
+```yml
+feign:
+  hystrix:
+    enabled: true
+```
+
+5、测试服务熔断
 
 上述方法为：当id为负数时，抛出异常。
 
 而配置的服务熔断为：10秒范围内最少10次请求，并且60%以上的失败时，会进行熔断。而一段时间后，如果访问的成功率较好，将会恢复链路。
 
-准备链接http://localhost:8001/payment/circuit/1  和 http://localhost:8001/payment/circuit/-1
+准备链接[localhost/hystrix/consumer/payment/circuitBreak/787](http://localhost/hystrix/consumer/payment/circuitBreak/787)和[localhost/hystrix/consumer/payment/circuitBreak/-111](http://localhost/hystrix/consumer/payment/circuitBreak/-111)
 
 模拟正常：多次访问第一个链接，无事发生
 
-模拟异常：连续多次访问第二个链接，一段时间后再访问第一个链接，发现第一个链接也返回异常数据：服务熔断掉了；继续访问第一个链接，一段时间后发现可以正常访问了，表示链路恢复了。
+模拟异常：连续多次访问第二个链接*（抛异常），一段时间后再访问第一个链接，发现第一个链接也返回异常数据：服务熔断掉了；继续访问第一个链接，一段时间后发现可以正常访问了，表示链路恢复了。
 
 ![image-20210222222923089](D:\我的文件\gitRepository\cloud-image\img\image-20210222222923089.png)
 
 ![image-20210222222957912](D:\我的文件\gitRepository\cloud-image\img\image-20210222222957912.png)
-
-
-
-
 
 
 

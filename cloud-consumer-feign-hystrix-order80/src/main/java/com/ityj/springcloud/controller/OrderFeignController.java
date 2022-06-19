@@ -36,4 +36,9 @@ public class OrderFeignController {
         return CommonResult.fail("orderTimeoutHandler: 80消费者端无法在规定时间内获取到响应数据或者程序出错！id = " + id);
     }
 
+
+    @GetMapping("/consumer/payment/circuitBreak/{id}")
+    public CommonResult<String> circuitBreak(@PathVariable("id") Long id) {
+        return paymentFeignService.circuitBreak(id);
+    }
 }

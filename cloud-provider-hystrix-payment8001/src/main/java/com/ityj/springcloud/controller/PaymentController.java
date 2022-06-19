@@ -30,4 +30,11 @@ public class PaymentController {
         log.info(result);
         return CommonResult.success(result);
     }
+
+    @GetMapping("/circuitBreak/{id}")
+    public CommonResult<String> circuitBreak(@PathVariable("id") Long id) {
+        String result = paymentService.circuitBreak(id);
+        return CommonResult.success(result);
+    }
+
 }
