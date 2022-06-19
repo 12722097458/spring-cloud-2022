@@ -23,7 +23,7 @@ public class PaymentServiceImpl implements PaymentService {
     })
     public String timeout(Long id) {
         //Double.valueOf(null);
-        long time = 5;
+        long time = 2;
         TimeUnit.SECONDS.sleep(time);
         return Thread.currentThread().getName() + "-timeout:" + time + "-" + id;
     }

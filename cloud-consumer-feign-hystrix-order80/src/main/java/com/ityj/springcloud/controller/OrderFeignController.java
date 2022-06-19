@@ -2,6 +2,8 @@ package com.ityj.springcloud.controller;
 
 import com.ityj.springcloud.entity.model.CommonResult;
 import com.ityj.springcloud.service.PaymentFeignService;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +25,16 @@ public class OrderFeignController {
     }
 
     @GetMapping("/consumer/payment/timeout/{id}")
+    @HystrixCommand(fallbackMethod = "orderTimeoutHandler", commandProperties = {
+            @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1500")
+    })
     public CommonResult<String> timeout(@PathVariable("id") Long id) {
+        //Double.valueOf(null);
         return paymentFeignService.timeout(id);
+    }
+
+    public CommonResult<String> orderTimeoutHandler(Long id) {
+        return CommonResult.fail("orderTimeoutHandler: 80消费者端无法在规定时间内获取到响应数据或者程序出错！id = " + id);
     }
 
 }

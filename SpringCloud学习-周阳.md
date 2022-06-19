@@ -2181,7 +2181,7 @@ public interface PaymentFeignService {
 }
 ```
 
-控制器实现
+controller实现
 
 ```java
 @RestController
@@ -2224,7 +2224,7 @@ feign:
 
 ### 4、问题解决（Hystrix）
 
-##### 1. 服务降级（fallback）：设置一个兜底策略
+#### 1. 服务降级（fallback）：设置一个兜底策略
 
 主要用到三个注解
 
@@ -2232,9 +2232,9 @@ feign:
 @HystrixCommand、@EnableCircuitBreaker和@DefaultProperties
 ```
 
-这些可以用在生产者上也可以用在消费者上。一般情况是会用于消费者端。
+这些可以用在生产者上也可以用在消费者上。一**般情况是会用于消费者端。**
 
-（1）这里先说明用于8001的服务提供者身上：
+##### （1）这里先说明用于8001的服务提供者身上：
 
 使用步骤：
 
@@ -2271,11 +2271,9 @@ feign:
 
    
 
-（2）对80的消费者端进行fallback服务降级
+##### （2）对80的消费者端进行fallback服务降级
 
-和服务端类似：
-
-不同点是配置文件需要添加：
+* 1. 配置文件修改
 
 ```yml
 feign:
@@ -2283,33 +2281,35 @@ feign:
     enabled: true #如果处理自身的容错就开启。开启方式与生产端不一样。
 ```
 
-其他类似
+* 2. 启动类添加注解
 
 启动类添加`@EnableHystrix       // 启动Hystrix服务降级`
 
-逻辑代码添加一个处理超时请求的兜底策略：
+* 3. 编写逻辑代码
 
 ```java
-@GetMapping(path = "/consumer/payment/timeout/{id}")
-@HystrixCommand(fallbackMethod = "paymentInfo_timeout_handler",commandProperties = {
-        @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds",value = "1500")})  //1.5秒钟以内就是正常的业务逻辑
-public String paymentInfo_timeout(@PathVariable(value = "id") Integer id) {
-    log.info("进入HysreixOrderController.paymentInfo_timeout()...");
-    // int a = 1 / 0;
-    return orderService.paymentInfo_timeout(id);
+@GetMapping("/consumer/payment/timeout/{id}")
+@HystrixCommand(fallbackMethod = "orderTimeoutHandler", commandProperties = {
+    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1500")
+})
+public CommonResult<String> timeout(@PathVariable("id") Long id) {
+    return paymentFeignService.timeout(id);
 }
 
-public String paymentInfo_timeout_handler(@PathVariable(value = "id") Integer id) {
-    log.info("进入HysreixOrderController.paymentInfo_timeout_handler()...");
-    return "线程池：" + Thread.currentThread().getName() + "出现错误，调用 paymentInfo_timeout_handler 兜底策略，请稍后重试！consumer侧ccccccccccccccc";
+public CommonResult<String> orderTimeoutHandler(Long id) {
+    return CommonResult.fail("orderTimeoutHandler: 80消费者端无法在规定时间内获取到响应数据或者程序出错！id = " + id);
 }
 ```
 
 消费者order80认为1.5秒内的返回为正常的，否则就走超时的兜底逻辑。
 
+* 4.测试可以发现超时或者order端报错能走到自己写的兜底策略
+
+  ![image-20220619202529186](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619202529.png)
 
 
 
+##### （3）问题总结与优化
 
 > 优化1：
 >
@@ -2398,7 +2398,7 @@ public String paymentInfo_timeout_handler(@PathVariable(value = "id") Integer id
 
 
 
-##### 2. 服务熔断（break）
+#### 2. 服务熔断（break）
 
 ![image-20210222221754446](D:\我的文件\gitRepository\cloud-image\img\image-20210222221754446.png)
 
@@ -2461,7 +2461,9 @@ public String paymentCircuitBreaker(@PathVariable("id") Integer id){
 
 
 
-##### 3.  服务限流（flowlimit）
+#### 3.  服务限流（flowlimit）
+
+
 
 #### 5. 服务监控hystrixDashboard
 

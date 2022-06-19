@@ -18,3 +18,5 @@ feign:
       default:
         connectTimeout: 5000         # 设置feign调用producer的最大超时时间
         readTimeout: 5000
+  hystrix:
+    enabled: true
