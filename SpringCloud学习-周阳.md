@@ -2311,89 +2311,90 @@ public CommonResult<String> orderTimeoutHandler(Long id) {
 
 ##### （3）问题总结与优化
 
-> 优化1：
->
+###### 优化1:defaultFallback
+
 > ​	现在每个方法需要写一个兜底策略，代码冗余严重。可以用@DefaultProperties(defaultFallback = "")注解，对一系列方法配置一个默认的策略。
 >
 > ```java
-> // 全局的兜底策略 ： fallback方法
-> public String globalFallBackHandler() {
->        return Thread.currentThread().getName() + "全局兜底策略执行了。。。";
+>// 全局的兜底策略 ： fallback方法
+> public CommonResult<String> globalFallBackHandler() {
+>     return CommonResult.fail(Thread.currentThread().getName() + "全局兜底策略执行了。。。");
 > }
+>    ```
+> 
+> ```java
+>@DefaultProperties(defaultFallback = "globalFallBackHandler", commandProperties = {
+>         @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "10000")
+> })
 > ```
 >
 > ```java
-> @DefaultProperties(defaultFallback = "globalFallBackHandler", commandProperties = {
->         @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "10000")
->})
-> ```
-> 
-> ```java
-> @Override
->    @HystrixCommand
-> public String success(Long id) {
->        Double.valueOf("sf");
->     return Thread.currentThread().getName() + "-success-" + id;
+> @GetMapping("/consumer/payment/success/{id}")
+> @HystrixCommand
+> public CommonResult<String> success(@PathVariable("id") Long id) {
+>        //Double.valueOf("sdf");
+>     return paymentFeignService.success(id);
 >    }
 > ```
-> 
->![image-20220619211221478](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619211221.png)
+>    
 
+此时可以直接关闭服务提供者8001，然后调用/consumer/payment/success/{id}，可以看到走了defaultFallback
 
+![image-20220619213230501](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619213230.png)
 
-> 优化2：
->
+###### 优化2:FeignClient--> fallback属性
+
 > ```java
-> @Component
+>@Component
 > @FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT")
 > public interface OrderService {}
 > ```
->
+> 
 > 一个自定义的FeignClient接口，可以指向一个服务提供者，因此可以根据这个特点，对这个接口进行实现，完成定制化。避免和业务逻辑混一起。
 >
 > （1）新建一个类HystrixOrderServiceImpl.java实现接口OrderService
 >
 > ```java
-> @Service
+>@Service
 > @Slf4j
 > public class HystrixOrderServiceImpl implements OrderService {
->     @Override
->     public String paymentInfo_OK(Integer id) {
+>  @Override
+>  public String paymentInfo_OK(Integer id) {
 >         log.info("进入了HystrixOrderServiceImpl.paymentInfo_OK()...进行错误处理。。。");
 >         return "cloud-consumer-feign-hystrix-order80   --->   paymentInfo_OK方法出现问题，请稍后重试！";
 >     }
-> 
+>    
 >     @Override
->     public String paymentInfo_timeout(Integer id) {
+>  public String paymentInfo_timeout(Integer id) {
 >         log.info("进入了HystrixOrderServiceImpl.paymentInfo_timeout()...进行错误处理。。。");
 >         return "cloud-consumer-feign-hystrix-order80   --->   paymentInfo_timeout 方法出现问题，请稍后重试！";
 >     }
-> }
-> ```
->
+>    }
+>    ```
+> 
 > （2）修改openfeign访问生产者的统一接口OrderService
 >
 > 添加fallback的属性。
 >
 > ```java
-> @Component
+>@Component
 > @FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT", fallback = HystrixOrderServiceImpl.class)  // fallback表明错误指向的方法
 > public interface OrderService {}
 > ```
->
+> 
 > （3）确保配置文件yml开启了hystrix
 >
 > ```yml
-> feign:
->   hystrix:
->     enabled: true #如果处理自身的容错就开启。开启方式与生产端不一样。
-> ```
->
+>feign:
+> hystrix:
+>  enabled: true #如果处理自身的容错就开启。开启方式与生产端不一样。
+>   ```
+>    
 > （4）启动相关服务器。进行测试。关闭8001或者在服务提供方制造错误，
 >
->  再次调用链接http://localhost/consumer/payment/ok/1，发现进入服务降级的方法。
+> 再次调用链接http://localhost/consumer/payment/ok/1，发现进入服务降级的方法。
 >
-> ![image-20210222220536422](D:\我的文件\gitRepository\cloud-image\img\image-20210222220536422.png)
+>  ![image-20210222220536422](D:\我的文件\gitRepository\cloud-image\img\image-20210222220536422.png)
 
 
 
