@@ -2317,28 +2317,27 @@ public CommonResult<String> orderTimeoutHandler(Long id) {
 >
 > ```java
 > // 全局的兜底策略 ： fallback方法
-> public String payment_Global_FallbackMethod(){
->     return "Global异常处理信息，请稍后再试,(┬＿┬)";
+> public String globalFallBackHandler() {
+>        return Thread.currentThread().getName() + "全局兜底策略执行了。。。";
 > }
 > ```
 >
 > ```java
-> @DefaultProperties(defaultFallback = "payment_Global_FallbackMethod")  //全局的
+> @DefaultProperties(defaultFallback = "globalFallBackHandler", commandProperties = {
+>         @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "10000")
+>})
 > ```
->
+> 
 > ```java
-> @GetMapping(path = "/consumer/payment/ok/{id}")
-> @HystrixCommand
-> public String paymentInfo_OK(@PathVariable(value = "id") Integer id) {
->     log.info("进入HysreixOrderController.paymentInfo_OK()...");
-> 
->     int a = 1 / 0;
-> 
->     return orderService.paymentInfo_OK(id);
-> }
+> @Override
+>    @HystrixCommand
+> public String success(Long id) {
+>        Double.valueOf("sf");
+>     return Thread.currentThread().getName() + "-success-" + id;
+>    }
 > ```
->
-> ![image-20210222142818720](D:\我的文件\gitRepository\cloud-image\img\image-20210222142818720.png)
+> 
+>![image-20220619211221478](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619211221.png)
 
 
 
