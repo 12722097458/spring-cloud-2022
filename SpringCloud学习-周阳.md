@@ -1918,19 +1918,19 @@ logging:
 
 复杂分布式结构中的应用程序有多个依赖关系，每个依赖关系在调用的时候不可避免会出现失败的情况，如果不妥善处理，就可能出现''雪崩''严重后果。
 
-#### 1、Hystrix介绍
+### 1、Hystrix介绍
 
 ![image-20210222083030356](D:\我的文件\gitRepository\cloud-image\img\image-20210222083030356.png)
 
 ![image-20210222083203460](D:\我的文件\gitRepository\cloud-image\img\image-20210222083203460.png)
 
-#### 2、Hystrix服务提供者8001构建
+### 2、Hystrix服务提供者8001构建
 
-（1）建module
+#### （1）建module
 
 新建module：cloud-provider-hystrix-payment8001
 
-（2）改pom
+#### （2）改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1962,7 +1962,7 @@ logging:
 </project>
 ```
 
-（3）写yml
+#### （3）写yml
 
 ```yml
 server:
@@ -1984,7 +1984,7 @@ eureka:
     prefer-ip-address: true
 ```
 
-（4）启动类
+#### （4）启动类
 
 ```java
 @SpringBootApplication
@@ -1996,7 +1996,7 @@ public class PaymentHystrix8001Starter {
 }
 ```
 
-（5）业务逻辑编写
+#### （5）业务逻辑编写
 
 service中包含两个方法：一个是直接返回入参，几乎不耗时；另一个是休眠一定时间再返回入参，会等待一定时间。
 
@@ -2045,7 +2045,7 @@ public class PaymentController {
 }
 ```
 
-（6）测试
+#### （6）测试
 
 启动 7001， 7002，7003, cloud-provider-hystrix-payment8001
 
@@ -2059,9 +2059,9 @@ public class PaymentController {
 
 都可以正常运行
 
-利用JMeter测试高并发情况：
+#### (7) 利用JMeter测试高并发情况
 
-##### ***Jmeter安装
+##### Jmeter安装
 
 > https://baijiahao.baidu.com/s?id=1663295636729480721&wfr=spider&for=pc
 
@@ -2079,15 +2079,17 @@ public class PaymentController {
 
   ![image-20220619160757119](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160757.png)
 
+##### 结论
+
 **测试最后发现，当paymentInfo_timeout进行高并发调用时，也会影响到paymentInfo_OK接口效率。**
 
-#### 3、Hystrix消费者80
+### 3、Hystrix消费者80
 
-（1）建module
+#### （1）建module
 
 新建cloud-consumer-feign-hystrix-order80来访问8081，模拟出现问题的情况
 
-（2）改pom
+#### （2）改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2124,7 +2126,7 @@ public class PaymentController {
 </project>
 ```
 
-（3）改yml
+#### （3）改yml
 
 ```yml
 server:
@@ -2149,7 +2151,7 @@ feign:
         readTimeout: 5000
 ```
 
-（4）启动类
+#### （4）启动类
 
 ```java
 @SpringBootApplication
@@ -2162,9 +2164,9 @@ public class ConsumerOrderHystrix80Starter {
 }
 ```
 
-（5）业务层-通过openfeign访问服务提供者8001
+#### （5）业务层
 
-接口编写
+> 通过openfeign访问服务提供者8001接口编写
 
 ```java
 @Component
@@ -2203,8 +2205,6 @@ public class OrderFeignController {
 }
 ```
 
-
-
 调用[localhost/hystrix/consumer/payment/success/312](http://localhost/hystrix/consumer/payment/success/312)，正常访问。
 
 **注意：消费者调用8081用的是open feign，而open feign默认的超时时间是1秒**
@@ -2222,7 +2222,7 @@ feign:
 
 
 
-#### 4、问题解决（Hystrix）
+### 4、问题解决（Hystrix）
 
 ##### 1. 服务降级（fallback）：设置一个兜底策略
 
@@ -2241,64 +2241,35 @@ feign:
 1. 在想要处理的业务层方法上添加@HystrixCommand注解并添加相关属性
 
    ```java
-   // Hystrix处理服务降级，当出现报错或者超时等错误时，会调用设置的兜底方法paymentInfo_timeout_handler
-   @HystrixCommand(fallbackMethod = "paymentInfo_timeout_handler")
-   public String paymentInfo_timeout(Integer id) {
-       int sleepSeconds = 3;
-       try {
-           TimeUnit.SECONDS.sleep(sleepSeconds);
-       } catch (InterruptedException e) {
-           e.printStackTrace();
-       }
-       return "线程池：" + Thread.currentThread().getName() + "   paymentInfo_timeout,id：  " + id + "sleep时间（秒）：" + sleepSeconds;
+   @SneakyThrows
+   @Override
+   @HystrixCommand(fallbackMethod = "timeoutHandler", commandProperties = {
+       @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")  //3秒钟以内就是正常的业务逻辑
+   })
+   public String timeout(Long id) {
+       //Double.valueOf(null);
+       long time = 5;
+       TimeUnit.SECONDS.sleep(time);
+       return Thread.currentThread().getName() + "-timeout:" + time + "-" + id;
    }
    
    // 兜底策略
-   public String paymentInfo_timeout_handler(Integer id) {
-       return "线程池：" + Thread.currentThread().getName() + "   出现错误，调用paymentInfo_timeout_handler兜底策略，请稍后重试！";
+   public String timeoutHandler(Long id) {
+       return Thread.currentThread().getName() + "-timeoutHandler: 程序繁忙，请稍后再试---" + id;
    }
    ```
 
 2. 在启动类上添加@EnableCircuitBreaker注解
 
-3. 手动在paymentInfo_timeout上添加报错提示  int a = 1 / 0;启动8081服务，访问http://localhost:8001/payment/timeout/1
+3. 启动8001服务，访问[localhost:8001/payment/timeout/312](http://localhost:8001/payment/timeout/312)
 
-   ![image-20210222125151930](D:\我的文件\gitRepository\cloud-image\img\image-20210222125151930.png)
+   ![image-20220619195652334](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619195652.png)
 
    
 
-4. 处理超时错误：在@HystrixCommand注解上添加commandProperties 属性即可
+4. 处理runtimeException, 在@HystrixCommand指定method即可。上面对于超时的配置同样适用于普通报错。
 
-   ```java
-   // Hystrix处理服务降级，当出现报错或者超时等错误时，会调用设置的兜底方法paymentInfo_timeout_handler
-   @HystrixCommand(fallbackMethod = "paymentInfo_timeout_handler",commandProperties = {
-           @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds",value = "3000")})  //3秒钟以内就是正常的业务逻辑
-   public String paymentInfo_timeout(Integer id) {
-       int sleepSeconds = 5;
-       //int a = 1 / 0;
-       try {
-           TimeUnit.SECONDS.sleep(sleepSeconds);
-       } catch (InterruptedException e) {
-           e.printStackTrace();
-       }
-       return "线程池：" + Thread.currentThread().getName() + "   paymentInfo_timeout,id：  " + id + "sleep时间（秒）：" + sleepSeconds;
-   }
    
-   // 兜底策略
-   public String paymentInfo_timeout_handler(Integer id) {
-       return "线程池：" + Thread.currentThread().getName() + "   出现错误，调用paymentInfo_timeout_handler兜底策略，请稍后重试！";
-   }
-   ```
-
-   此时paymentInfo_timeout方法需要睡眠5秒才能开始继续执行，而Hystrix设置的超时时间为3秒：超过3秒将会走兜底策略。
-
-   重启，测试：http://localhost:8001/payment/timeout/1
-
-   页面3秒后显示错误结果
-
-   ![image-20210222125717862](D:\我的文件\gitRepository\cloud-image\img\image-20210222125717862.png)
-
-   ![image-20210222125745636](D:\我的文件\gitRepository\cloud-image\img\image-20210222125745636.png)
 
 （2）对80的消费者端进行fallback服务降级
 
