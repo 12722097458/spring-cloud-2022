@@ -2475,11 +2475,11 @@ feign:
 
 
 
-#### 5. 服务监控hystrixDashboard
+### 5. 服务监控hystrixDashboard
 
 ![image-20210223184536259](https://i.loli.net/2021/02/23/z6Ak2EbF4ZRamqi.png)
 
-##### 1、搭建dashboard9001项目
+#### 1、搭建dashboard9001项目
 
 （1）新建module，新建cloud-consumer-hystrix-dashboard9001
 
@@ -2491,44 +2491,28 @@ feign:
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-consumer-hystrix-dashboard9001</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!--新增hystrix dashboard-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
 </project>
 ```
 
@@ -2536,7 +2520,11 @@ feign:
 
 ```yml
 server:
-  port: 9001
+  port: 9001         # http://localhost:9001/hystrix
+
+hystrix:
+  dashboard:
+    proxy-stream-allow-list: "*"    # 解决HystrixDashboard 监控页面 Unable to connect to Command Metric Stream.
 ```
 
 （4）启动类
@@ -2557,11 +2545,11 @@ public class HystrixDashboard9001Starter {
 
 启动http://localhost:9001/hystrix
 
-![image-20210223185202088](https://i.loli.net/2021/02/23/PRcZk2lzBCrfqMF.png)
+![image-20220622221450147](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622221457.png)
 
-##### 2、启动8001，并让dashbord9001对8001进行监控
+#### 2、启动8001，并让dashbord9001对8001进行监控
 
-（1）pom
+##### （1）pom
 
 确保8001中有actuator的依赖
 
@@ -2572,48 +2560,36 @@ public class HystrixDashboard9001Starter {
 </dependency>
 ```
 
-（2）在8001启动类中指定监控路径
+##### （2）确保开启了actuator/hystrix.stream 的监控配置
 
-注意：新版本Hystrix需要在主启动类PaymentHystrix8001Starter中指定监控路径
+```yml
+server:
+  port: 8001
 
-```java
-@SpringBootApplication
-@EnableEurekaClient
-@EnableCircuitBreaker  // 服务降级开启
-public class PaymentHystrix8001Starter {
+...
 
-    public static void main(String[] args) {
-        SpringApplication.run(PaymentHystrix8001Starter.class, args);
-    }
-
-    @Bean
-    public ServletRegistrationBean getServlet(){
-        HystrixMetricsStreamServlet streamServlet = new HystrixMetricsStreamServlet();
-        ServletRegistrationBean registrationBean = new ServletRegistrationBean(streamServlet);
-        registrationBean.setLoadOnStartup(1);
-        registrationBean.addUrlMappings("/hystrix.stream");
-        registrationBean.setName("HystrixMetricsStreamServlet");
-        return registrationBean;
-    }
-
-}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,hystrix.stream #根据需求增删路径
 ```
 
-（3）启动7001,7002,8001，9001dashbord
+##### （3）启动7001,7002,7003,8001,801,9001dashbord
 
-访问http://localhost:9001/hystrix监控平台，并对http://localhost:8001/hystrix.stream进行监控；
+访问http://localhost:9001/hystrix监控平台，并对http://localhost:8001/actuator/hystrix.stream进行监控；
 
-![image-20210223190529539](https://i.loli.net/2021/02/23/uCYKlF4jdRmVZ7y.png)
+![image-20220622221754227](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622221754.png)
 
 对8001服务熔断的接口进行访问测试：
 
-http://localhost:8001/payment/circuit/1   成功
+http://localhost:8001//payment/circuitBreak/333   成功
 
-http://localhost:8001/payment/circuit/-1  失败
+http://localhost:8001//payment/circuitBreak/-11  失败
 
 多次访问失败链接，发现断路器打开。一段时间后再次访问失败的链接，发现断路器关闭，可以正常工作。
 
-![image-20210223190833883](https://i.loli.net/2021/02/23/jfHlWiJp3vP9onZ.png)
+![image-20220622222057553](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622222057.png)
 
 
 
@@ -5455,3 +5431,26 @@ public List<InstanceInfo> getInstancesByVirtualHostName(String virtualHostName) 
 </dependency>
 ```
 
+
+
+## 7、hystrixDashboard无法正常监控其他应用
+
+![image-20220622222254036](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622222254.png)
+
+接口是正常的
+
+![image-20220622222323755](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622222323.png)
+
+
+
+解决方法：
+
+在90001dashboard中添加配置：
+
+```yml
+hystrix:
+  dashboard:
+    proxy-stream-allow-list: "*"
+```
+
+重启即可。

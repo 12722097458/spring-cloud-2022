@@ -1,0 +1,6 @@
+server:
+  port: 9001         # http://localhost:9001/hystrix
+
+hystrix:
+  dashboard:
+    proxy-stream-allow-list: "*"    # 解决HystrixDashboard 监控页面 Unable to connect to Command Metric Stream.
