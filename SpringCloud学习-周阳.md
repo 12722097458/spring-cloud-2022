@@ -2903,9 +2903,11 @@ eureka:
 
 ```yml
 predicates:
-    - Path=/payment/getPort/**   #断言,路径相匹配的进行路由
-    - After=2021-02-25T22:41:56.214+08:00[Asia/Shanghai]   # 可以通过 ZonedDateTime.now() 获取携带时区的当前时间。多个predicates之间相当于and，这里的意思是只有在2021-02-25T22:41:56.214+08:00[Asia/Shanghai]之后此路由才能生效。
-
+    - Path=/payment/get/**   #断言,路径相匹配的进行路由
+    - After=2022-06-26T17:55:13.076168800+08:00[Asia/Shanghai]   # 可以通过 ZonedDateTime.now() 获取携带时区的当前时间。多个predicates之间相当于and，这里的意思是只有在2021-02-25T22:41:56.214+08:00[Asia/Shanghai]之后此路由才能生效。
+	- Cookie=username,Jack     # curl -X GET http://localhost:9527/payment/get/1 --cookie "username=Jack"
+    - Header=X-Request-Id, \d+   #请求头中要有X-Request-Id属性并且值为整数的正则表达式 curl -X GET http://localhost:9527/payment/get/1 -H "X-Request-Id:123" --cookie "username=Jack"
+    - Host=**.jack.com   #   curl -X GET http://localhost:9527/payment/get/1 -H "Host:www.jack.com" -H "X-Request-Id:123" --cookie "username=Jack"
 ```
 
 #### 7、Filter的使用
