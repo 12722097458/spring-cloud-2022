@@ -2916,24 +2916,25 @@ predicates:
 
 ##### 1、自定义全局GlobalFilter过滤器
 
-（1）在9725gateway服务中添加MyLoginGateWayFilter模拟对未登录的用户过滤
+（1）在9725gateway服务中添加GatewayFilter模拟对未登录的用户过滤
 
-即：当请求中不含username=xxx的键值对时，进行拒绝。
+即：当请求中不含uname=xxx的键值对时，进行拒绝。
 
 ```java
 @Component
 @Slf4j
-public class MyLoginGateWayFilter implements GlobalFilter, Ordered {
+public class GatewayFilter implements GlobalFilter, Ordered {
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        log.info("进入MyLoginGateWayFilter。。。。start...");
-        String username = exchange.getRequest().getQueryParams().getFirst("username");
-        if (ObjectUtils.isEmpty(username)) {
-            log.info("用户未登录，无法进入。。。o(╥﹏╥)o");
-            exchange.getResponse().setStatusCode(HttpStatus.NOT_ACCEPTABLE);
+        // http://localhost:9527/payment/discovery?uname=222
+        String uname = exchange.getRequest().getQueryParams().getFirst("uname");
+        log.info("Into GatewayFilter..., uname = {}", uname);
+        if (!StringUtils.hasText(uname)) {
+            log.info("Please input username!");
+            exchange.getResponse().setStatusCode(HttpStatus.BAD_GATEWAY);
             return exchange.getResponse().setComplete();
         }
-        log.info("用户已登录，可以进入。。。☺");
         return chain.filter(exchange);
     }
 
@@ -2942,17 +2943,18 @@ public class MyLoginGateWayFilter implements GlobalFilter, Ordered {
         return 0;
     }
 }
+
 ```
 
 （2）测试
 
-正确：http://localhost:9527/payment/getPort?username=23
+正确：http://localhost:9527/payment/discovery?uname=222
 
-![image-20210225222635105](D:\我的文件\gitRepository\cloud-image\img\image-20210225222635105.png)
+![image-20220626221205553](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626221205.png)
 
-错误：http://localhost:9527/payment/getPort
+错误：http://localhost:9527/payment/discovery
 
-![image-20210225222658038](D:\我的文件\gitRepository\cloud-image\img\image-20210225222658038.png)
+![image-20220626221228006](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626221228.png)
 
 ### 七、config分布式配置中心
 
