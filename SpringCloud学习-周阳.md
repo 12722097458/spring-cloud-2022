@@ -2974,9 +2974,11 @@ https://blog.csdn.net/weixin_44588243/article/details/114207103
 
 用于存放公用的配置文件，作为config服务器的远程服务器文件。  --》config server
 
-（1）建module：cloud-config-center-3344
+###### （1）建module
 
-（2）改pom:
+> cloud-config-center-3344
+
+###### （2）改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -3014,7 +3016,7 @@ https://blog.csdn.net/weixin_44588243/article/details/114207103
 </project>
 ```
 
-（3）改yml
+###### （3）改yml
 
 ```yml
 server:
@@ -3043,7 +3045,7 @@ eureka:
 
 
 
-（4）启动类
+###### （4）启动类
 
 作为配置文件服务端，需要添加注解：@EnableConfigServer
 
@@ -3058,7 +3060,7 @@ public class CloudConfig3344Starter {
 }
 ```
 
-（5）测试
+###### （5）测试
 
 启动eureka服务端：7001,7002,7003以及新建的3344配置文件服务端。
 
@@ -3078,13 +3080,11 @@ public class CloudConfig3344Starter {
 
 服务端3344访问远程仓库的数据并作为各个微服务的配置中心，而各个微服务3355,3366。。。通过3344来获取和远程仓库一致的配置信息。
 
-（1）建module：cloud-config-client-3355
+##### （1）建module
 
-（2）改pom
+>  cloud-config-client-3355
 
-没有加server就是客户端
-
-<artifactId>spring-cloud-starter-config</artifactId>
+##### （2）改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -3092,62 +3092,37 @@ public class CloudConfig3344Starter {
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-config-client-3355</artifactId>
 
     <dependencies>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
+
+        <!--新加spring-cloud-config-client-->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-client</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
     </dependencies>
 
 </project>
 ```
 
-（3）加bootstap.yml
+##### （3）加bootstap.yml
 
 ![image-20210228111514141](D:\我的文件\gitRepository\cloud-image\img\image-20210228111514141.png)
 
@@ -3163,21 +3138,25 @@ server:
 
 spring:
   application:
-    name: config-client
+    name: config-client-3355
   cloud:
-    # Config客户端配置
     config:
-      label: master    # 分支名称
-      name: config     # 配置文件名称
-      profile: dev     # 配置文件后缀
-      uri: http://localhost:3344   # 上述三个属性：master分支上的config-dev.yml的配置文件，会被读取。http://config-3344.com:3344/master/config-dev.yml
+      label: master
+      name: config
+      profile: dev
+      uri: http://localhost:3344
 eureka:
   client:
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
+  instance:
+    instance-id: config-client-3355
+    prefer-ip-address: true
 ```
 
-（4）启动类编写
+##### （4）启动类编写
 
 ```java
 @SpringBootApplication
@@ -3189,49 +3168,41 @@ public class ConfigClient3355Starter {
 }
 ```
 
-（5）业务类编写
+##### （5）业务类编写
 
 访问远程仓库对应的属性，看能否正常获取。其实访问的是3344服务端
 
 ```java
 @RestController
-@Slf4j
-public class MyClientController {
+public class ConfigController {
 
-    @Value(value = "${remote.version}")
-    private String version;
+    @Value("${config.info}")
+    private String configInfo;
 
-    // http://localhost:3355/getRemoteVersion
-    @GetMapping(path = "/getRemoteVersion")
-    public String getRemoteVersion() {
-        log.info("进入getRemoteVersion。。。。。。");
-        return "version : " + version;
+    @GetMapping("/configInfo")
+    public String getConfigInfo(){
+        return configInfo;
     }
-
 }
 ```
 
-（6）启动测试
+##### （6）测试
 
 启动时，第一次bootstrap.yml写成了bootstrp，导致无法扫描到这个配置文件，所以访问远程仓库属性导致注入失败，一直报错。
 
-
-
-启动7001,7002,3344以及3355
+启动7001,7002，7003，3344以及3355
 
 访问http://config-3344.com:3344/master/config-dev.yml，正常。
 
-访问http://localhost:3355/getRemoteVersion，正常访问，可以获取到远程仓库的属性。（是通过3344访问出来的）
+访问http://config-3344.com:3355/configInfo，正常访问，可以获取到远程仓库的属性。（是通过3344访问出来的）
 
 
 
 继续测试：
 
-修改远程仓库的配置内容，3344访问可以立即更新，而3355/getRemoteVersion获取的还是未更新前的属性。
+修改远程仓库的配置内容，3344访问可以立即更新，而3355/configInfo获取的还是未更新前的属性。
 
 重启3355后，3355也能获取到最新的配置了。
-
-
 
 现在就出现了一个问题，分布式配置还未实现动态刷新，如果每次更改都需要重启，将会非常麻烦。
 
