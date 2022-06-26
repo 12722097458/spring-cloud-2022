@@ -8,6 +8,7 @@ import com.ityj.springcloud.service.PaymentService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 @Service
 public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, PaymentPO> implements PaymentService {
@@ -24,6 +25,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, PaymentPO> im
     @Override
     public PaymentDTO getPaymentById(Long id) {
         PaymentPO paymentPO = baseMapper.selectById(id);
+        Assert.notNull(paymentPO, "Could not find related info.");
         PaymentDTO paymentDTO = new PaymentDTO();
         BeanUtils.copyProperties(paymentPO, paymentDTO);
         return paymentDTO;

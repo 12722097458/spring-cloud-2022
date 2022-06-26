@@ -2591,7 +2591,11 @@ http://localhost:8001//payment/circuitBreak/-11  失败
 
 ![image-20220622222057553](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622222057.png)
 
+![image-20220622222810853](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220622222811.png)
 
+
+
+![image-20220623201314636](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220623201321.png)
 
 ### 六、Gateway网关
 
@@ -2627,15 +2631,15 @@ Spring Cloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，
 
 #### 1、三大核心概念
 
-##### 1、Route(路由)
+##### 1.1 Route(路由)
 
 路由是构建网关的基本模块，它由ID，目标URI，一系列的断言和过滤器组成，如果断言为true则匹配该路由
 
-##### 2、Predicate（断言）
+##### 1.2 Predicate（断言）
 
 参考的是java8的java.util.function.Predicate开发人员可以匹配HTTP请求中的所有内容（例如请求头或请求参数），如果请求与断言相匹配则进行路由
 
-##### 3、Filter(过滤)
+##### 1.3 Filter(过滤)
 
 指的是Spring框架中GatewayFilter的实例，使用过滤器，可以在请求被路由前或者之后对请求进行修改。
 
@@ -2655,9 +2659,9 @@ Spring Cloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -2669,40 +2673,31 @@ Spring Cloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.ityj.springcloud</groupId>
-            <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.xiaoymin</groupId>
+                    <artifactId>knife4j-spring-boot-starter</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
+
+
 </project>
 ```
 
@@ -2717,11 +2712,13 @@ spring:
 eureka:
   instance:
     hostname: cloud-gateway-service
+    instance-id: gateway9527
+    prefer-ip-address: true
   client:
     service-url:
       register-with-eureka: true
       fetch-registry: true
-      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
 ```
 
 
@@ -2729,85 +2726,102 @@ eureka:
 （4）主启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
-
 @SpringBootApplication
 @EnableEurekaClient
-public class GateWay9527Starter {
-
+public class Gateway9527Starter {
     public static void main(String[] args) {
-        SpringApplication.run(GateWay9527Starter.class, args);
+        SpringApplication.run(Gateway9527Starter.class, args);
     }
 }
+
 ```
 
 （5）测试
 
 目前网关没有做任何工作，只是将自己注册进了eureka
 
-启动7001,7002，以及9275查看eureka是否将其注册进去了。
+启动7001,7002,7003，8001, 以及9275查看eureka是否将其注册进去了。
 
 http://eureka7001.com:7001/
 
-![image-20210224223855780](D:\我的文件\gitRepository\cloud-image\img\image-20210224223855780.png)
+![image-20220626154842647](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626154849.png)
 
 
 
 #### 3、9527网关路由映射8081
 
-启动8081，访问http://localhost:8081/payment/getPort能 正常返回结果。
+启动8081，访问http://localhost:8001/payment/get/1能 正常返回结果。
 
 需求：我们目前不想暴露8001端口，希望在8001外面套一层9527
 
-即访问  http://localhost:9527/payment/getPort也可以正常访问。
+即访问  http://localhost:9527/payment/get/1也可以正常访问。
 
 
 
 只需要修改9527的配置文件
 
 ```yml
-server:
-  port: 9527
 spring:
-  application:
-    name: cloud-gateway
   cloud:
     gateway:
       routes:
-        - id: payment_routh #路由的ID，没有固定规则但要求唯一，建议配合服务名
-          uri: http://localhost:8081   #匹配后提供服务的路由地址
+        - id: payment_route #路由的ID，没有固定规则但要求唯一，建议配合服务名
+          uri: http://localhost:8001   #匹配后提供服务的路由地址
           predicates:
-            - Path=/payment/getPort/**   #断言,路径相匹配的进行路由
+            - Path=/payment/get/**   #断言,路径相匹配的进行路由
 
-        - id: payment_routh2
-          uri: http://localhost:8081
+        - id: payment_route2
+          uri: http://localhost:8001
           predicates:
-            - Path=/payment/lb/**   #断言,路径相匹配的进行路由
-
-
-eureka:
-  instance:
-    hostname: cloud-gateway-service
-  client:
-    service-url:
-      register-with-eureka: true
-      fetch-registry: true
-      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
+            - Path=/payment/discovery  #断言,路径相匹配的进行路由
 ```
 
 
 
 测试：
 
-访问http://localhost:9527/payment/getPort，可以正常返回结果。
+访问http://localhost:9527/payment/get/1，可以正常返回结果。
 
-![image-20210224225830982](D:\我的文件\gitRepository\cloud-image\img\image-20210224225830982.png)
+![image-20220626155050615](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626155050.png)
 
-#### 4、通过微服务名实现动态路由
+#### 4、通过配置类实现路由
+
+```java
+@Configuration
+public class GatewayRouteConfig {
+
+    @Bean
+    public RouteLocator routeLocator(RouteLocatorBuilder routeLocatorBuilder) {
+        RouteLocatorBuilder.Builder routes = routeLocatorBuilder.routes();
+
+        routes.route("route_mil", x -> x.path("/mil").uri("http://news.baidu.com/guonei")).build();
+        routes.route("route_game", x -> x.path("/game").uri("http://news.baidu.com/game")).build();
+        return routes.build();
+    }
+}
+```
+
+和通过配置文件编写的一样：
+
+```yml
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: route_mil #路由的ID，没有固定规则但要求唯一，建议配合服务名      http://news.baidu.com/mil
+          uri: http://news.baidu.com   #匹配后提供服务的路由地址
+          predicates:
+            - Path=/mil   #断言,路径相匹配的进行路由
+
+        - id: route_game
+          uri: http://news.baidu.com
+          predicates:
+            - Path=/game  #断言,路径相匹配的进行路由
+```
+
+![image-20220626171645488](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626171645.png)
+
+#### 5、通过微服务名实现动态路由
 
 >  默认情况下Gateway会根据注册中心的服务列表，以注册中心上微服务名为路径创建动态路由进行转发，从而实现动态路由的功能
 
@@ -2874,7 +2888,7 @@ cloud:
 
 发现服务端口8081和8082轮询切换。
 
-#### 5、Predicate的使用
+#### 6、Predicate的使用
 
 启动9527项目，发现启动项里有很多Route Predicate Factories
 
@@ -2893,7 +2907,7 @@ predicates:
 
 ```
 
-#### 6、Filter的使用
+#### 7、Filter的使用
 
 ![image-20210225221404766](D:\我的文件\gitRepository\cloud-image\img\image-20210225221404766.png)
 
@@ -5454,3 +5468,30 @@ hystrix:
 ```
 
 重启即可。
+
+
+
+
+
+## 8、java.lang.IllegalArgumentException: Source must not be null
+
+原来的代码是：
+
+```java
+@Override
+public PaymentDTO getPaymentById(Long id) {
+    PaymentPO paymentPO = baseMapper.selectById(id);
+    Assert.notNull(paymentPO, "Could not find related info.");
+    BeanUtils.copyProperties(paymentPO, paymentDTO);
+    return paymentDTO;
+}
+```
+
+报错原因是paymentPO为null。导致BeanUtils.copyProperties出错。添加判断即可
+
+```java
+Assert.notNull(paymentPO, "Could not find related info.");
+```
+
+
+

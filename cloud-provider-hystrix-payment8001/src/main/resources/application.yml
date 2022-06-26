@@ -20,4 +20,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,hystrix.stream #根据需求增删路径
+        include: health,info,hystrix.stream #根据需求增删路径          http://localhost:8001/actuator/hystrix.stream

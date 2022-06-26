@@ -12,7 +12,7 @@ public class GlobalExceptionHandlerExceptionResolver {
     @ExceptionHandler(value = {Exception.class})
     public CommonResult<String> handleException(Exception e) {
         log.info("Error occurred:", e);
-        return CommonResult.fail(e.toString());
+        return CommonResult.fail(e.getMessage());
     }
 
 }
