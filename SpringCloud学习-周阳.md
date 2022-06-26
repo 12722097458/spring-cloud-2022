@@ -2597,7 +2597,7 @@ http://localhost:8001//payment/circuitBreak/-11  失败
 
 ![image-20220623201314636](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220623201321.png)
 
-### 六、Gateway网关
+## 七、Gateway网关
 
 > 原本网关主要是使用zuul1.X但是，1.X存在一些问题，在升级到2.X过程中公司内部出现一些问题，导致效率低下。Spring选择自己研发GateWay
 
@@ -2956,11 +2956,11 @@ public class GatewayFilter implements GlobalFilter, Ordered {
 
 ![image-20220626221228006](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626221228.png)
 
-### 七、config分布式配置中心
+## 八、config分布式配置中心
 
 ![image-20210227211918837](D:\我的文件\gitRepository\cloud-image\img\image-20210227211918837.png)
 
-![image-20210227212440433](D:\我的文件\gitRepository\cloud-image\img\image-20210227212440433.png)
+**![image-20220626225912183](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626225912.png)**
 
 ![image-20210227212452728](D:\我的文件\gitRepository\cloud-image\img\image-20210227212452728.png)
 
@@ -2978,17 +2978,15 @@ https://blog.csdn.net/weixin_44588243/article/details/114207103
 
 （2）改pom:
 
-<artifactId>spring-cloud-config-server</artifactId>
-
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -2996,47 +2994,22 @@ https://blog.csdn.net/weixin_44588243/article/details/114207103
 
     <dependencies>
         <dependency>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!--新加spring-cloud-config-->
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-config-server</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.ityj.springcloud</groupId>
-            <artifactId>cloud-api-commons</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
 
 </project>
 ```
@@ -3053,21 +3026,22 @@ spring:
     config:
       server:
         git:
-          uri: https://gitee.com/yj1109/springcloud-config.git   # 注意选择https对应的uri
+          uri: https://github.com/12722097458/spring-cloud-2022-config.git
           search-paths:
-            - springcloud-config
+            - spring-cloud-2022-config
       label: master
 eureka:
   client:
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:7001/eureka,http://localhost:7002/eureka
-
-# http://config-3344.com:3344/master/config-dev.yml
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
+  instance:
+    instance-id: config3344
+    prefer-ip-address: true
 ```
 
-uri这里选择的是gitee新建的公开仓库
 
-![image-20210228105802674](D:\我的文件\gitRepository\cloud-image\img\image-20210228105802674.png)
 
 （4）启动类
 
@@ -3075,23 +3049,30 @@ uri这里选择的是gitee新建的公开仓库
 
 ```java
 @SpringBootApplication
-@EnableConfigServer    // 作为config配置的服务端
-public class ConfigCenter3344Starter {
+@EnableEurekaClient
+@EnableConfigServer   // 作为config配置的服务端
+public class CloudConfig3344Starter {
     public static void main(String[] args) {
-        SpringApplication.run(ConfigCenter3344Starter.class, args);
+        SpringApplication.run(CloudConfig3344Starter.class, args);
     }
 }
 ```
 
 （5）测试
 
-启动eureka服务端：7001,7002以及新建的3344配置文件服务端。
+启动eureka服务端：7001,7002,7003以及新建的3344配置文件服务端。
 
-访问http://config-3344.com:3344/master/config-dev.yml（config-dev.yml是码云远程仓库的文件），看能否获取到其内容。
+在C:\Windows\System32\drivers\etc\hosts中配置一个映射host
+
+```shell
+127.0.0.1 config-3344.com
+```
+
+访问http://config-3344.com:3344/master/config-dev.yml（config-dev.yml是github远程仓库的文件），看能否获取到其内容。
 
 结果可以。
 
-![image-20210228110036727](D:\我的文件\gitRepository\cloud-image\img\image-20210228110036727.png)
+**![image-20220626230944270](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626230944.png)**
 
 #### 2、Config客户端配置与测试
 
@@ -3323,7 +3304,7 @@ management:
 
 
 
-### 八、SpringCloud Bus 消息总线
+## 九、SpringCloud Bus 消息总线
 
 **Spring Cloud Bus配合Spring Cloud Config使用可以实现配置的动态刷新，通过广播实现一次通知，处处生效。**
 
@@ -3517,7 +3498,7 @@ eg:只通知3355，不通知3366
 
 
 
-### 九、SpringCloud Stream消息驱动
+## 十、SpringCloud Stream消息驱动
 
 #### 1、消息驱动概述
 
@@ -4077,7 +4058,7 @@ eureka:
 
 
 
-### 十、SpringCloud Sleuth分布式请求链路追踪
+## 十一、SpringCloud Sleuth分布式请求链路追踪
 
 为什么会出现这个技术？需要解决哪些问题？
 
