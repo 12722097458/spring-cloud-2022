@@ -2825,11 +2825,14 @@ spring:
 
 >  默认情况下Gateway会根据注册中心的服务列表，以注册中心上微服务名为路径创建动态路由进行转发，从而实现动态路由的功能
 
-在8081和8082服务下都有`/payment/getPort`获取端口号的方法，8081和8082也注册进了Eureka，服务名称为**CLOUD-PAYMENT-SERVICE**。可以通过这个服务名结合gateway实现负载均衡。
+在8081和8082服务下都有`/payment/get/1获取端口号的方法，8001和8002也注册进了Eureka，服务名称为**CLOUD-PAYMENT-SERVICE**。可以通过这个服务名结合gateway实现负载均衡。
 
-1、启动Eureka7001和Eureka7001、gateway9527和服务8081与服务8082
+1、启动Eureka7001和Eureka7001、7003、gateway9527和服务8081与服务8082
 
 2、修改gateway9527的yml
+
+* 添加spring.cloud.gateway.discovery.locator.enabled=true
+* 修改spring.cloud.gateway.routes[1/2].uri=lb://CLOUD-PAYMENT-SERVICE
 
 ```yml
 server:
@@ -2839,54 +2842,52 @@ spring:
     name: cloud-gateway
   cloud:
     gateway:
+      routes:
+        - id: payment_route #路由的ID，没有固定规则但要求唯一，建议配合服务名
+          #uri: http://localhost:8001   #匹配后提供服务的路由地址
+          uri: lb://CLOUD-PAYMENT-SERVICE   #匹配后提供服务的路由地址
+          predicates:
+            - Path=/payment/get/**   #断言,路径相匹配的进行路由
+
+        - id: payment_route2
+          uri: http://localhost:8001
+          predicates:
+            - Path=/payment/discovery  #断言,路径相匹配的进行路由
+
+
+        - id: route_guoji #路由的ID，没有固定规则但要求唯一，建议配合服务名      http://news.baidu.com/guoji
+          #uri: http://news.baidu.com   #匹配后提供服务的路由地址
+          uri: lb://CLOUD-PAYMENT-SERVICE   #匹配后提供服务的路由地址
+          predicates:
+            - Path=/guoji   #断言,路径相匹配的进行路由
+
+        - id: route_guonei
+          uri: http://news.baidu.com
+          predicates:
+            - Path=/guonei  #断言,路径相匹配的进行路由
       discovery:
         locator:
-          enabled: true     #开启从注册中心动态创建路由的功能，利用微服务名进行路由
-      routes:
-        - id: payment_routh #路由的ID，没有固定规则但要求唯一，建议配合服务名
-          #uri: http://localhost:8081   #匹配后提供服务的路由地址
-          uri: lb://CLOUD-PAYMENT-SERVICE   #通过微服务名实现动态路由
-          predicates:
-            - Path=/payment/getPort/**   #断言,路径相匹配的进行路由
-
-        - id: payment_routh2
-          #uri: http://localhost:8081
-          uri: lb://CLOUD-PAYMENT-SERVICE   #通过微服务名实现动态路由
-          predicates:
-            - Path=/payment/lb/**   #断言,路径相匹配的进行路由
-
+          enabled: true
 
 eureka:
   instance:
     hostname: cloud-gateway-service
+    instance-id: gateway9527
+    prefer-ip-address: true
   client:
     service-url:
       register-with-eureka: true
       fetch-registry: true
-      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
-
-```
-
-
-
-修改了以下两个内容，其中uri的lb:/ /需要注意的是uri的协议为lb，表示启用Gateway的负载均衡功能
-
-```shell
-cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: true     #开启从注册中心动态创建路由的功能，利用微服务名进行路由
-          
-          
-			uri: lb://CLOUD-PAYMENT-SERVICE   #通过微服务名实现动态路由
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
 ```
 
 3、测试
 
-调用连接 http://localhost:9527/payment/getPort
+调用连接 http://localhost:9527/payment/get/1
 
-发现服务端口8081和8082轮询切换。
+发现服务端口8081和8082轮询调用
+
+![image-20220626173155755](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626173155.png)
 
 #### 6、Predicate的使用
 
