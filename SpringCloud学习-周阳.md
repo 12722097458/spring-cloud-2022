@@ -3212,9 +3212,9 @@ public class ConfigController {
 
 避免每次更新配置都要重启客户端微服务3355，我们需要修改3355模块：
 
-（1）POM引入actuator监控
+##### （1）POM引入actuator监控
 
-确保已经引入了
+确保已经引入
 
 ```xml
 <dependency>
@@ -3223,7 +3223,9 @@ public class ConfigController {
 </dependency>
 ```
 
-目前此依赖要求和<artifactId>spring-boot-starter-web</artifactId>绑定，两者同时引入。除了网关gateway，其他都加上。（2）修改YML，暴露监控端口
+目前此依赖要求和spring-boot-starter-web绑定，两者同时引入。除了网关gateway，其他都加上。
+
+##### （2）修改YML，暴露监控端口
 
 3355中添加
 
@@ -3232,20 +3234,20 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info,hystrix.stream,refresh # refresh POST请求可用于远程仓库配置更新后，3355同步3344server的信息 curl -X POST http://localhost:3355/actuator/refresh
 ```
 
-（3）修改控制器
+##### （3）修改控制器
 
 添加注解`@RefreshScope`
 
-（4）重启3355，测试
+##### （4）重启3355，测试
 
 启动7001,7002,3344,3355
 
 访问http://config-3344.com:3344/master/config-dev.yml，正常。
 
-访问http://localhost:3355/getRemoteVersion，正常。
+访问http://localhost:3355/configInfo，正常。
 
 
 
@@ -3253,7 +3255,7 @@ management:
 
 访问http://config-3344.com:3344/master/config-dev.yml，直接更新，得到最新数据。
 
-访问http://localhost:3355/getRemoteVersion，未更新。
+访问http://localhost:3355/configInfo，未更新。
 
 ？？？
 
@@ -3261,17 +3263,17 @@ management:
 
 `curl -X POST "http://localhost:3355/actuator/refresh"`
 
-![image-20210228125554231](D:\我的文件\gitRepository\cloud-image\img\image-20210228125554231.png)
+![image-20220626235156222](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626235156.png)
 
-刷新完，无需重启项目，再次访问http://localhost:3355/getRemoteVersion，发现已经是最新的数据。
+刷新完，无需重启项目，再次访问http://localhost:3355/configInfo，发现已经是最新的数据。
 
 
 
-（5）总结
+##### （5）总结
 
 此时每次修改后都需要运维人员手动调用链接进行刷新，也很麻烦。
 
-需要找到一种方法：可否广播，一次通知，处处生效？
+需要找到一种方法：可否广播，一次通知，处处生效？==Bus可以解决==
 
 
 
