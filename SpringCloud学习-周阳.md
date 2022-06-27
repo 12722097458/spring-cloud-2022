@@ -2956,7 +2956,7 @@ public class GatewayFilter implements GlobalFilter, Ordered {
 
 ![image-20220626221228006](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626221228.png)
 
-## 八、config分布式配置中心
+## 八、Config分布式配置中心
 
 ![image-20210227211918837](D:\我的文件\gitRepository\cloud-image\img\image-20210227211918837.png)
 
@@ -3325,13 +3325,13 @@ cmd进入命令窗口，执行`rabbitmq-plugins enable rabbitmq_management`命�
 
 创建完毕，测试：
 
-启动7001,7002,3344,3355,3366
+启动7001,7002,7003,3344,3355,3366
 
 访问http://config-3344.com:3344/master/config-dev.yml：结果为最新配置。
 
-http://localhost:3355/getRemoteVersion：也是最新的
+http://localhost:3355/configInfo：也是最新的
 
-http://localhost:3366/getRemoteVersion：也是最新的
+http://localhost:3366/configInfo：也是最新的
 
 
 
@@ -3379,31 +3379,31 @@ curl -X POST "http://localhost:3366/actuator/refresh"
        config:
          server:
            git:
-             uri: https://gitee.com/yj1109/springcloud-config.git   # 注意选择https对应的uri
+             uri: https://github.com/12722097458/spring-cloud-2022-config.git
              search-paths:
-               - springcloud-config
+               - spring-cloud-2022-config
          label: master
-   
-     # 配置rabbitMQ的属性
      rabbitmq:
        host: localhost
        port: 5672
        username: guest
        password: guest
-       
+   
    eureka:
      client:
+       register-with-eureka: true
+       fetch-registry: true
        service-url:
-         defaultZone: http://localhost:7001/eureka,http://localhost:7002/eureka
-   
-   # http://config-3344.com:3344/master/config-dev.yml
+         defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
+     instance:
+       instance-id: config3344
+       prefer-ip-address: true
    
    management:
      endpoints:
        web:
          exposure:
-           include: 'bus-refresh'
-    
+           include: 'bus-refresh'       # curl -X POST http://localhost:3344/actuator/bus-refresh
    ```
 
    添加了rabbitMQ的配置和最后的bus配置。
@@ -3423,14 +3423,17 @@ curl -X POST "http://localhost:3366/actuator/refresh"
 
 2. 添加rabbitMQ的配置
 
+   > server端口是5672，UI页面的端口是15672
+   
    ```yml
-   rabbitmq:
-       host: localhost
-       port: 5672
-       username: guest
-       password: guest
+   spring:
+   	rabbitmq:
+           host: localhost
+           port: 5672
+        username: guest
+           password: guest
    ```
-
+   
    
 
 ##### （3）测试
@@ -3439,9 +3442,9 @@ curl -X POST "http://localhost:3366/actuator/refresh"
 
 访问http://config-3344.com:3344/master/config-dev.yml：结果为最新配置。
 
-http://localhost:3355/getRemoteVersion：也是最新的
+http://localhost:3355/configInfo：也是最新的
 
-http://localhost:3366/getRemoteVersion：也是最新的
+http://localhost:3366/configInfo：也是最新的
 
 修改远程的配置文件，发现3355和3366都不会更新。
 
@@ -3465,7 +3468,7 @@ curl -X POST "http://localhost:3344/actuator/bus-refresh"
 
 eg:只通知3355，不通知3366
 
-`curl -X POST "http://localhost:3344/actuator/bus-refresh/config-client-3355:3355"`
+`curl -X POST "http://localhost:3344/actuator/bus-refresh/config-client:3355"`
 
 最后发现，实现了通知3355而未通知3366
 

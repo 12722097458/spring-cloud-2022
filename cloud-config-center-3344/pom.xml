@@ -18,6 +18,12 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+        <!--使用rabbitMQ添加消息总线支持-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+        </dependency>
+
         <!--新加spring-cloud-config-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
