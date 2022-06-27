@@ -3478,6 +3478,10 @@ eg:只通知3355，不通知3366
 
 #### 1、消息驱动概述
 
+![image-20220627213315080](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220627213322.png)
+
+==屏蔽底层消息中间件的差异，降低切换版本，统一消息的编程模型==
+
 ![image-20210301163054066](D:\我的文件\gitRepository\cloud-image\img\image-20210301163054066.png)
 
 为什么用Cloud Stream？
@@ -3500,9 +3504,9 @@ eg:只通知3355，不通知3366
 
 #### 2、消息驱动之生产者8801项目搭建
 
-（1）cloud-stream-rabbitmq-provider8801创建
+##### （1）cloud-stream-rabbitmq-provider8801创建
 
-（2）pom修改
+##### （2）pom修改
 
 特殊：
 
@@ -3519,9 +3523,9 @@ eg:只通知3355，不通知3366
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -3529,12 +3533,12 @@ eg:只通知3355，不通知3366
 
     <dependencies>
 
+        <!--RabbitMQ Binder-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-eureka-server -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
@@ -3543,43 +3547,7 @@ eg:只通知3355，不通知3366
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
@@ -3587,7 +3555,7 @@ eg:只通知3355，不通知3366
 </project>
 ```
 
-（3）改yml
+##### （3）改yml
 
 ```yml
 server:
@@ -3614,20 +3582,31 @@ spring:
           content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
           binder: defaultRabbit  # 设置要绑定的消息服务的具体设置
 
+
 eureka:
   client: # 客户端进行Eureka注册的配置
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:7001/eureka,http://localhost:7002/eureka
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
   instance:
-    lease-renewal-interval-in-seconds: 2 # 设置心跳的时间间隔（默认是30秒）
-    lease-expiration-duration-in-seconds: 5 # 如果现在超过了5秒的间隔（默认是90秒）
     instance-id: send-8801.com  # 在信息列表时显示主机名称
     prefer-ip-address: true     # 访问的路径变为IP地址
 ```
 
+##### （4）启动类
 
+```java
+@SpringBootApplication
+@EnableEurekaClient
+public class StreamPayment8801Starter {
+    public static void main(String[] args) {
+        SpringApplication.run(StreamPayment8801Starter.class, args);
+    }
+}
+```
 
-（4）业务代码
+##### （5）业务代码
 
 1. 发送消息接口
 
@@ -3640,74 +3619,55 @@ eureka:
 2. 发送消息接口实现类
 
    ```java
-   package com.ityj.springcloud.service.impl;
-   
-   import com.ityj.springcloud.service.MessageProviderService;
-   import lombok.extern.slf4j.Slf4j;
-   import org.springframework.beans.factory.annotation.Autowired;
-   import org.springframework.cloud.stream.annotation.EnableBinding;
-   import org.springframework.cloud.stream.messaging.Source;
-   import org.springframework.messaging.MessageChannel;
-   import org.springframework.messaging.support.MessageBuilder;
-   
-   import java.time.LocalDateTime;
-   import java.util.UUID;
-   
-   @EnableBinding(Source.class) //定义消息的推送管道
+   @EnableBinding(Source.class)  //定义消息的推送管道
    @Slf4j
    public class MessageProviderServiceImpl implements MessageProviderService {
    
+       @Qualifier("output")
        @Autowired
-       private MessageChannel output; // 消息发送管道
+       private MessageChannel messageChannel;
    
        @Override
        public String sendMessage() {
-           String uuid = UUID.randomUUID().toString();
-           log.info("uuid = {}", uuid);
-           output.send(MessageBuilder.withPayload(uuid).build());
-           return "success：" + LocalDateTime.now();
+           String message = UUID.fastUUID().toString();
+           log.info("Sending data {} to RabbitMQ...", message);
+           messageChannel.send(MessageBuilder.withPayload(message).build());
+           return message;
        }
    }
    ```
-
+   
 3. controller
 
    ```java
-   package com.ityj.springcloud.controller;
-   
-   import com.ityj.springcloud.service.MessageProviderService;
-   import lombok.extern.slf4j.Slf4j;
-   import org.springframework.beans.factory.annotation.Autowired;
-   import org.springframework.web.bind.annotation.GetMapping;
-   import org.springframework.web.bind.annotation.RestController;
-   
    @RestController
    @Slf4j
-   public class SendMessageController {
+   public class MessageSendController {
    
        @Autowired
        private MessageProviderService messageProviderService;
    
-       @GetMapping(path = "/sendMessage")
+       @GetMapping("/sendMessage")
        public String sendMessage() {
            return messageProviderService.sendMessage();
        }
+   
    }
    ```
 
-（4）测试
+##### （6）测试
 
-启动7001，7002, 以及这个8801；启动rabbitMQ服务器
+启动7001，7002, 7003 以及8801；启动rabbitMQ服务器
 
 访问http://localhost:8801/sendMessage，最终可以在rabbitMQ页面上看到波动情况。
 
-![image-20210301180146276](D:\我的文件\gitRepository\cloud-image\img\image-20210301180146276.png)
+![image-20220627233143369](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220627233143.png)
 
 #### 3、消息驱动之消费者8802
 
-（1）新建cloud-stream-rabbitmq-consumer8802
+##### （1）新建cloud-stream-rabbitmq-consumer8802
 
-（2）改pom
+##### （2）改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -3715,77 +3675,36 @@ eureka:
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloud-stream-rabbitmq-consumer8802</artifactId>
 
     <dependencies>
-
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-eureka-server -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.atguigu.springcloud</groupId>
+            <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
-
 
 </project>
 ```
 
-（3）写yml
+##### （3）写yml
 
 ```yml
 server:
@@ -3814,68 +3733,54 @@ spring:
 
 eureka:
   client: # 客户端进行Eureka注册的配置
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:7001/eureka,http://localhost:7002/eureka
+      defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
   instance:
-    lease-renewal-interval-in-seconds: 2 # 设置心跳的时间间隔（默认是30秒）
-    lease-expiration-duration-in-seconds: 5 # 如果现在超过了5秒的间隔（默认是90秒）
-    instance-id: receive-8802.com  # 在信息列表时显示主机名称
+    instance-id: send-8802.com  # 在信息列表时显示主机名称
     prefer-ip-address: true     # 访问的路径变为IP地址
 ```
 
-（4）启动类
+##### （4）启动类
 
 ```java
-package com.ityj.springcloud;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+@EnableEurekaClient
 @SpringBootApplication
-public class StreamMQConsumer8802Starter {
-
+public class StreamConsumer8802Starter {
     public static void main(String[] args) {
-        SpringApplication.run(StreamMQConsumer8802Starter.class, args);
+        SpringApplication.run(StreamConsumer8802Starter.class, args);
     }
-
 }
 ```
 
-（5）业务编写
+##### （5）业务编写
 
 ```java
-package com.ityj.springcloud.controller;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.stream.annotation.EnableBinding;
-import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.cloud.stream.messaging.Sink;
-import org.springframework.messaging.Message;
-import org.springframework.stereotype.Component;
-
-@Component
 @EnableBinding(Sink.class)
-public class ReceiveMessageListenerService {
+@Component
+@Slf4j
+public class MessageReceiveService {
 
-    @Value(value = "${server.port}")
+    @Value("${server.port}")
     private String serverPort;
 
-    @StreamListener(Sink.INPUT)
-    public void receiveMessage(Message<String> message) {
-        System.out.println("消费者1号，接受："+message.getPayload()+"\t port:"+serverPort);
+    @StreamListener(value = Sink.INPUT)
+    public void receive(Message<String> message) {
+        log.info("Receive data {}, Server port is:{}", message.getPayload(), serverPort);
     }
 }
 ```
 
-（6）测试
+##### （6）测试
 
-启动7001、7002、8801、8802和rabbitMQ的服务端
+启动7001、7002、7003、8801、8802和rabbitMQ的服务端
 
 多次访问生产者 http://localhost:8801/sendMessage，在rabbitMQ页面上看到波动情况。
 
 其中8802的控制台可以看到有打印信息出现，即进行了消费。
 
-![image-20210301190417655](D:\我的文件\gitRepository\cloud-image\img\image-20210301190417655.png)
+![image-20220627233315754](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220627233315.png)
 
 #### 4、消息驱动之消费者8803
 
