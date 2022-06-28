@@ -3790,25 +3790,25 @@ cloud-stream-rabbitmq-consumer8803
 
 测试：
 
-再启动8083
+再启动8803
 
 并多次访问生产者 http://localhost:8801/sendMessage。
 
-此时分别查看8002和8003的控制台打印情况：
+此时分别查看8802和8803的控制台打印情况：
 
-8001生产者：
+8801生产者：
 
-![image-20210301191820425](D:\我的文件\gitRepository\cloud-image\img\image-20210301191820425.png)
+![image-20220628093722456](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628093729.png)
 
-8002消费者：
+8802消费者：
 
-![image-20210301191841155](D:\我的文件\gitRepository\cloud-image\img\image-20210301191841155.png)
+![image-20220628093740680](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628093740.png)
 
-8003消费者：
+8803消费者：
 
-![image-20210301191901929](D:\我的文件\gitRepository\cloud-image\img\image-20210301191901929.png)
+![image-20220628093811645](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628093811.png)
 
-**发现，生产的两条数据，被8002和8003同时消费掉了。出现了重复消费的问题。**
+**发现，生产的两条数据，被8802和8803同时消费掉了。出现了重复消费的问题。**
 
 #### 5、分组消费与持久化解决重复消费问题
 
@@ -3828,96 +3828,27 @@ cloud-stream-rabbitmq-consumer8803
 
 
 
-修改8002和8003配置文件，显式地指定组名。
+修改8802和8803配置文件，显式地指定组名。
 
 `group: ityjGroup8802`
 
 ```yml
-server:
-  port: 8802
-
-spring:
-  application:
-    name: cloud-stream-consumer
-  cloud:
-    stream:
-      binders: # 在此处配置要绑定的rabbitmq的服务信息；
-        defaultRabbit: # 表示定义的名称，用于于binding整合
-          type: rabbit # 消息组件类型
-          environment: # 设置rabbitmq的相关的环境配置
-            spring:
-              rabbitmq:
-                host: localhost
-                port: 5672
-                username: guest
-                password: guest
-      bindings: # 服务的整合处理
-        input: # 这个名字是一个通道的名称
-          destination: studyExchange # 表示要使用的Exchange名称定义
-          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
-          binder: defaultRabbit  # 设置要绑定的消息服务的具体设置
-          group: ityjGroup8802
-eureka:
-  client: # 客户端进行Eureka注册的配置
-    service-url:
-      defaultZone: http://localhost:7001/eureka,http://localhost:7002/eureka
-  instance:
-    lease-renewal-interval-in-seconds: 2 # 设置心跳的时间间隔（默认是30秒）
-    lease-expiration-duration-in-seconds: 5 # 如果现在超过了5秒的间隔（默认是90秒）
-    instance-id: receive-8802.com  # 在信息列表时显示主机名称
-    prefer-ip-address: true     # 访问的路径变为IP地址
+spring.cloud.stream.bindings.input.group=group-consumer-yj
 ```
 
-```yml
-server:
-  port: 8803
+==此时8802和8803在同一个组内，不会出现重复消费的问题。==两个消费者轮询消费.
 
-spring:
-  application:
-    name: cloud-stream-consumer
-  cloud:
-    stream:
-      binders: # 在此处配置要绑定的rabbitmq的服务信息；
-        defaultRabbit: # 表示定义的名称，用于于binding整合
-          type: rabbit # 消息组件类型
-          environment: # 设置rabbitmq的相关的环境配置
-            spring:
-              rabbitmq:
-                host: localhost
-                port: 5672
-                username: guest
-                password: guest
-      bindings: # 服务的整合处理
-        input: # 这个名字是一个通道的名称
-          destination: studyExchange # 表示要使用的Exchange名称定义
-          content-type: application/json # 设置消息类型，本次为json，文本则设置“text/plain”
-          binder: defaultRabbit  # 设置要绑定的消息服务的具体设置
-          group: ityjGroup8803
+8801
 
-eureka:
-  client: # 客户端进行Eureka注册的配置
-    service-url:
-      defaultZone: http://localhost:7001/eureka,http://localhost:7002/eureka
-  instance:
-    lease-renewal-interval-in-seconds: 2 # 设置心跳的时间间隔（默认是30秒）
-    lease-expiration-duration-in-seconds: 5 # 如果现在超过了5秒的间隔（默认是90秒）
-    instance-id: receive-8803.com  # 在信息列表时显示主机名称
-    prefer-ip-address: true     # 访问的路径变为IP地址
-```
+![image-20220628094205794](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628094205.png)
 
-此时8802和8803都还是在不同的组内，所以还是会出现重复消费的问题。
+8802
 
+![image-20220628094219764](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628094219.png)
 
+8803
 
-**把8003的group改为和8002一致：ityjGroup8802；**
-
-再次重启，可以实现轮询的操作，并且不会出现重复消费问题。
-
-![image-20210301195103866](D:\我的文件\gitRepository\cloud-image\img\image-20210301195103866.png)
-
-![image-20210301195121994](D:\我的文件\gitRepository\cloud-image\img\image-20210301195121994.png)
-
-![image-20210301195137290](D:\我的文件\gitRepository\cloud-image\img\image-20210301195137290.png)
+![image-20220628094231801](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628094231.png)
 
 ##### （2）持久化
 
@@ -3925,7 +3856,7 @@ eureka:
 
 此时如果配置了group属性，就可以持久化，没有配置就不行。
 
->  删除8802的group: ityjGroup8802配置，此时8803有group: ityjGroup8802配置
+>  **删除8802**的group: group-consumer-yj配置，此时8803有group: group-consumer-yj配置
 
 关闭8802和8803
 
@@ -3935,9 +3866,17 @@ eureka:
 
 启动8803服务，发现8803启动后可以消费8001已有的数据。
 
-![image-20210301205437675](D:\我的文件\gitRepository\cloud-image\img\image-20210301205437675.png)
+==所以group分组一定要加上==
+
+![image-20220628094904084](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628094904.png)
+
+**![image-20220628095000745](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628095000.png)**
 
 
+
+可以看到对于group:group-consumer-yj2没有消费者正常工作，所以任务都存在队列里，当有服务工作时会进行消费（实现了持久化）
+
+![image-20220628095238181](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628095238.png)
 
 ## 十一、SpringCloud Sleuth分布式请求链路追踪
 

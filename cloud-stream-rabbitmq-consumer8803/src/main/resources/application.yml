@@ -1,5 +1,5 @@
 server:
-  port: 8802
+  port: 8803
 
 spring:
   application:
@@ -30,5 +30,5 @@ eureka:
     service-url:
       defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka,http://eureka7003.com:7003/eureka
   instance:
-    instance-id: send-8802.com  # 在信息列表时显示主机名称
+    instance-id: send-8803.com  # 在信息列表时显示主机名称
     prefer-ip-address: true     # 访问的路径变为IP地址
