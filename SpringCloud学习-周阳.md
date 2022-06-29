@@ -3901,9 +3901,11 @@ cd D:\Java\zipkin-server-2.12.9-exec
 java -jar zipkin-server-2.12.9-exec.jar
 ```
 
+
+
 启动成功后，访问http://localhost:9411/zipkin/，正常显示即表示启动成功！
 
-![image-20210301213819626](D:\我的文件\gitRepository\cloud-image\img\image-20210301213819626.png)
+![image-20220629233037301](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220629233044.png)
 
 ##### 2、运行控制台
 
@@ -3915,7 +3917,7 @@ java -jar zipkin-server-2.12.9-exec.jar
 
 ##### 3、修改8081提供者和80服务消费者
 
-###### 1.修改8081
+###### 1.修改cloud-provider-hystrix-payment:8001
 
 （1）改pom
 
@@ -3942,16 +3944,9 @@ spring:
       probability: 1
 ```
 
-（3）添加一个基本的控制器
 
-```java
-@GetMapping("/payment/zipkin")
-public String paymentZipkin() {
-    return "hi ,i'am paymentzipkin server fall back，welcome to IT，O(∩_∩)O哈哈~";
-}
-```
 
-###### 2.修改80
+###### 2.修改cloud-openfeign-order-service:80
 
 （1）改pom
 
@@ -3976,32 +3971,21 @@ spring:
       probability: 1
 ```
 
-（3）编写控制器，调用8081的/payment/zipkin请求。
-
-```java
-private static final String PAYMENT_URL = "http://CLOUD-PAYMENT-SERVICE/payment/";   //服务提供者 集群版
-@GetMapping("/payment/zipkin")
-public String paymentZipkin()
-{
-    return restTemplate.getForObject(PAYMENT_URL + "zipkin/", String.class);
-}
-```
-
 ###### 3.测试
 
-访问几次http://localhost:8081/payment/zipkin和http://localhost/consumer/payment/zipkin
+多次访问http://localhost/hystrix/consumer/payment/success/3
 
 并登录http://localhost:9411/zipkin/
 
-![image-20210301223831045](D:\我的文件\gitRepository\cloud-image\img\image-20210301223831045.png)
+![image-20220629233959851](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220629234000.png)
 
 可见，服务名有了注册的服务。
 
 可以点击依赖进行查看微服务之间的关系，以及其他的细节内容。
 
-![image-20210301223949240](D:\我的文件\gitRepository\cloud-image\img\image-20210301223949240.png)
+![image-20220629234028481](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220629234028.png)
 
-
+![image-20220629234107799](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220629234107.png)
 
 
 
