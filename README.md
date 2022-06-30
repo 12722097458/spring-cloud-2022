@@ -58,5 +58,16 @@ java -jar zipkin-server-2.12.9-exec.jar
 
 
 
+# 6、Nacos
+
+> Dynamic *Na*ming and *Co*nfiguration *S*ervice
+>
+> 服务发现、服务配置 = Eureka + Config&Bus
+
+```shell
+cd D:\Java\cloud-alibaba\nacos-server-2.1.0\nacos\bin
+startup.cmd -m standalone    # 以单机模式启动
+```
+
 
 

@@ -4009,23 +4009,29 @@ Nacos就是注册中心+配置中心的组合，一个更易于构建云原生�
 
 #### 2、安装并运行Nacos
 
-先从官网下载Nacos，nacos-server-1.2.0.zip解压运行bin目录下的startup.cmd即可。
+```shell
+https://github.com/alibaba/nacos/releases?page=1
+cd D:\Java\cloud-alibaba\nacos-server-2.1.0\nacos\bin
+startup.cmd -m standalone    # 以单机模式启动
+```
 
-![image-20210302084103107](D:\我的文件\gitRepository\cloud-image\img\image-20210302084103107.png)
+先从官网下载Nacos，nacos-server-2.1.0.zip解压运行bin目录下的startup.cmd即可。
+
+![image-20220630224005491](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220630224012.png)
 
 
 
 启动后登录其前端页面：http://localhost:8848/nacos
 
-![image-20210302084327128](D:\我的文件\gitRepository\cloud-image\img\image-20210302084327128.png)
+![image-20220630224108033](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220630224108.png)
 
 #### 3、Nacos作为服务注册中心替代Eureka
 
 ##### 1、服务提供者cloudalibaba-provider-payment9001创建
 
-（1）新建module
+###### （1）新建module
 
-（2）改pom
+###### （2）改pom
 
 * 确保父项目中有`<artifactId>spring-cloud-alibaba-dependencies</artifactId>`的依赖。
 
@@ -4037,9 +4043,9 @@ Nacos就是注册中心+配置中心的组合，一个更易于构建云原生�
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -4047,52 +4053,21 @@ Nacos就是注册中心+配置中心的组合，一个更易于构建云原生�
 
     <dependencies>
         <dependency>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.ityj.springcloud</groupId>
-            <artifactId>cloud-api-commons</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.62</version>
-        </dependency>
     </dependencies>
-
 
 </project>
 ```
 
-（3）改yml
+###### （3）改yml
 
 ```yml
 server:
@@ -4101,10 +4076,11 @@ server:
 spring:
   application:
     name: nacos-payment-provider
+
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848 #配置Nacos地址
+        server-addr: localhost:8848
 
 management:
   endpoints:
@@ -4113,46 +4089,50 @@ management:
         include: '*'
 ```
 
-（4）主启动
+###### （4）主启动
 
 ```java
 @SpringBootApplication
 @EnableDiscoveryClient
-public class ProviderAli9001Starter {
+public class NacosProvider9001Starter {
     public static void main(String[] args) {
-        SpringApplication.run(ProviderAli9001Starter.class, args);
+        SpringApplication.run(NacosProvider9001Starter.class, args);
     }
 }
+
 ```
 
-（5）业务代码
+###### （5）业务代码
 
 ```java
 @RestController
-public class PaymentController
-{
+@RequestMapping("/payment")
+public class PaymentController {
+
     @Value("${server.port}")
     private String serverPort;
 
-    @GetMapping(value = "/payment/nacos/{id}")
-    public String getPayment(@PathVariable("id") Integer id)
-    {
-        return "nacos registry, serverPort: "+ serverPort+"\t id"+id;
+    @GetMapping("/nacos/{id}")
+    public String getPortInfo(@PathVariable("id") Integer id) {
+        return "Input parameter id:" + id + ",serverPort:" + serverPort;
     }
+
 }
 ```
 
-（6）测试
+###### （6）测试
 
 启动Nacos服务以及9001
 
 访问http://localhost:8848/nacos，发现9001已经在nacos上注册完毕。
 
-![image-20210302085623683](D:\我的文件\gitRepository\cloud-image\img\image-20210302085623683.png)
+![image-20220630233011072](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220630233011.png)
 
 调用controller链接：http://localhost:9001/payment/nacos/33
 
 可正常访问。	
+
+![image-20220630233036840](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220630233036.png)
 
 ##### 2、模仿9001，新建模块9002
 
@@ -4168,21 +4148,21 @@ public class PaymentController
 
 保存，启动9011，访问http://localhost:9001/payment/nacos/33和http://localhost:9011/payment/nacos/33都可以正常。
 
-![image-20210302090530921](D:\我的文件\gitRepository\cloud-image\img\image-20210302090530921.png)
-
 但是不推荐使用。
+
+
 
 模仿9001创建module9002。用于负载均衡测试。
 
-
+![image-20220630233205840](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220630233205.png)
 
 ##### 3、基于Nacos的服务消费者
 
-（1）建module
+###### （1）建module
 
 cloudalibaba-consumer-nacos-order83
 
-（2）改pom
+###### （2）改pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -4190,48 +4170,24 @@ cloudalibaba-consumer-nacos-order83
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cloudalibaba-consumer-nacos-order83</artifactId>
 
     <dependencies>
-        <!--SpringCloud ailibaba nacos -->
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
+
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
     </dependencies>
 
@@ -4242,38 +4198,41 @@ nacos支持负载均衡，因为内部集成了ribbon。
 
 ![image-20210302091237551](D:\我的文件\gitRepository\cloud-image\img\image-20210302091237551.png)
 
-（3）改yml
+###### （3）改yml
 
 ```yml
 server:
   port: 83
-  
+
 spring:
   application:
-    name: nacos-order-consumer
+    name: nacos-payment-consumer
+
   cloud:
     nacos:
       discovery:
         server-addr: localhost:8848
 
-service-url: 
-  nacos-user-service: http://nacos-payment-provider       # 不是spring的配置，自定义的服务提供者接口uri 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 ```
 
-（4）启动类
+###### （4）启动类
 
 ```java
 @SpringBootApplication
 @EnableDiscoveryClient
-public class ConsumerNacosAli83Starter {
+public class NacosConsumer83Starter {
     public static void main(String[] args) {
-        SpringApplication.run(ConsumerNacosAli83Starter.class, args);
-
+        SpringApplication.run(NacosConsumer83Starter.class, args);
     }
 }
 ```
 
-（5）业务类
+###### （5）业务类
 
 作为一个消费端，暂且使用原始的restTemplate来实现和客户端的交互。
 
@@ -4297,17 +4256,16 @@ public class ApplicationContextConfig {
 
 ```java
 @RestController
-@Slf4j
-public class OrderNacosController {
-    @Resource
+public class OrderController {
+
+    @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${service-url.nacos-user-service}")
-    private String serverURL;
-
-    @GetMapping(value = "/consumer/payment/nacos/{id}")
-    public String paymentInfo(@PathVariable("id") Long id) {
-        return restTemplate.getForObject(serverURL+"/payment/nacos/"+id,String.class);
+    private static final String PAYMENT_URL = "http://nacos-payment-provider/";
+    
+    @GetMapping("/consumer/payment/nacos/{id}")
+    public String getById(@PathVariable("id") Long id) {
+        return restTemplate.getForObject(PAYMENT_URL + "payment/nacos/" + id, String.class);
     }
 
 }
@@ -4315,19 +4273,19 @@ public class OrderNacosController {
 
 
 
-（6）测试
+###### （6）测试
 
 启动9001,9002和83
 
 现在Nacos页面上查看服务注册情况：三个都已经注册成功！
 
-![image-20210302092556161](D:\我的文件\gitRepository\cloud-image\img\image-20210302092556161.png)
-
-
+![image-20220630233512882](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220630233513.png)
 
 访问http://localhost:83/consumer/payment/nacos/33消费者调用情况：
 
 发现可以正常调用，并且实现了负载均衡：轮询
+
+
 
 ##### 4、各种服务注册对比
 
