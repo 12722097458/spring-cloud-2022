@@ -4313,11 +4313,11 @@ C：数据一致性
 
 ##### 1、搭建nacos的服务
 
-（1）建module
+###### （1）建module
 
 cloudalibaba-config-nacos-client3377
 
-（2）引pom
+###### （2）引pom
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -4335,47 +4335,41 @@ cloudalibaba-config-nacos-client3377
 
     <dependencies>
         <!--nacos-config-->
+        <depe<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>spring-cloud-2022</artifactId>
+        <groupId>com.ityj.springcloud</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloudalibaba-config-nacos-client3377</artifactId>
+
+    <dependencies>
         <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
-        <!--nacos-discovery-->
+
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
-        <!--web + actuator-->
+
+        <!--nacos config-->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <!--一般基础配置-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
     </dependencies>
-
 </project>
 ```
 
-（3）写yml（2个）
+###### （3）写yml（2个）
 
 application.yml是获取Nacos配置中心的配置文件内容，而bootstrap.yml是自己个性化的内容。
 
@@ -4400,61 +4394,70 @@ server:
 spring:
   application:
     name: nacos-config-client
+
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848 #服务注册中心地址
+        server-addr: localhost:8848
       config:
-        server-addr: localhost:8848 #配置中心地址
-        file-extension: yaml #指定yaml格式的配置
+        server-addr: localhost:8848
+        file-extension: yaml
 
-# 读取的就是Nacos配置中心的 nacos-config-client-dev.yaml配置文件
-#                           ${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
-#                           如果spring.profiles.active没有配置，就默认  ${spring.application.name}.${spring.cloud.nacos.config.file-extension}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# ${spring.application.name}-${spring.profile.active}.${spring.cloud.nacos.config.file-extension}
+# nacos-config-client-dev.yaml
 ```
 
-（4）启动类
+###### （4）启动类
 
 ```java
-@EnableDiscoveryClient
 @SpringBootApplication
+@EnableDiscoveryClient
 public class NacosConfigClient3377Starter {
+
     public static void main(String[] args) {
         SpringApplication.run(NacosConfigClient3377Starter.class, args);
     }
+
 }
 ```
 
-（5）controller业务层
+###### （5）controller业务层
 
 ```java
 @RestController
 @RefreshScope
-@Slf4j
-public class NacoConfigController {
+public class ConfigController {
+
     @Value("${config.info}")
     private String configInfo;
 
-    @GetMapping("/config/info")
+    @GetMapping("/nacos/configInfo")
     public String getConfigInfo() {
         return configInfo;
     }
+
 }
 ```
 
-（7）添加Nacos配置
+###### （6）添加Nacos配置
 
 登录http://localhost:8848/nacos，在配置列表里新增nacos-config-client-dev.yaml配置文件，文件名是根据上述两个配置中固定的。
 
-![image-20210302100754240](D:\我的文件\gitRepository\cloud-image\img\image-20210302100754240.png)
+![image-20220701125939750](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220701125946.png)
 
-![image-20210302100844621](D:\我的文件\gitRepository\cloud-image\img\image-20210302100844621.png)
+![image-20220701125953898](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220701125954.png)
 
-（7）测试
+###### （7）测试
 
-启动3377服务，访问http://localhost:3377/config/info，看能否正常。
+访问http://localhost:3377/nacos/configInfo，可正常获取
 
-修改Nacos的配置，再次访问http://localhost:3377/config/info，发现已经实时更新。
+修改Nacos的配置，再次访问http://localhost:3377/nacos/configInfo，发现已经实时更新。
 
 
 
