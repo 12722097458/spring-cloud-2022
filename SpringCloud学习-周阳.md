@@ -4564,6 +4564,48 @@ hostname -i
 
 #### 5、Nacos集群和持久化配置（重要）
 
+##### 1、切换nacos默认数据源
+
+> nacos默认的数据源是Derby，如果多个节点的nacos出现时，每一个节点有一个内嵌的Derby数据库，会导致数据不一致。所以切换到mysql.
+
+官方的教程：
+
+```shell
+https://nacos.io/zh-cn/docs/cluster-mode-quick-start.html
+https://nacos.io/zh-cn/docs/deployment.html
+```
+
+###### （1）建表
+
+找到conf目录下的nacos-mysql.sql文件，执行脚本，生成对应的表。
+
+```shell
+cat D:\Java\cloud-alibaba\nacos-server-2.1.0\nacos\conf\nacos-mysql.sql
+```
+
+![image-20220704225943292](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220704225943.png)
+
+###### （2）切换数据源:改配置
+
+将下面的配置append到conf/application.properties中。
+
+```shell
+spring.datasource.platform=mysql
+
+db.num=1
+db.url.0=jdbc:mysql://192.168.137.110:3306/nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=true&useUnicode=true&serverTimezone=Asia/Shanghai
+db.user=root
+db.password=root
+```
+
+###### （3）重启nacos测试
+
+重启后之前的配置和namespace都清空了。再次添加配置，发现已经持久化到数据库中了。
+
+![image-20220704225923589](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220704225930.png)
+
+
+
 
 
 ### 二、Sentinel
