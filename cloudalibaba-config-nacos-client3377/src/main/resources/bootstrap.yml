@@ -12,6 +12,8 @@ spring:
       config:
         server-addr: localhost:8848
         file-extension: yaml
+        group: DEV_GROUP
+        namespace: feb6f605-cefb-4941-a53f-84d78c855fbc
 
 management:
   endpoints:
@@ -20,4 +22,5 @@ management:
         include: '*'
 
 # ${spring.application.name}-${spring.profile.active}.${spring.cloud.nacos.config.file-extension}
-# nacos-config-client-dev.yaml
+# Data ID: nacos-config-client-dev.yaml
+# namespace + Group + Data ID确定一个具体的配置文件
