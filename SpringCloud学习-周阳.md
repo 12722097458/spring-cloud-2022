@@ -4606,6 +4606,199 @@ db.password=root
 
 
 
+##### 2、在Linux上安装nacos并切换到mysql数据源
+
+###### 1.1 下载[nacos-server-2.1.0.tar.gz](https://github.com/alibaba/nacos/releases/download/2.1.0/nacos-server-2.1.0.tar.gz)
+
+###### 1.2 上传并压缩上述文件
+
+```shell
+cd /app/tools/springcloud
+rz
+tar -zxvf nacos-server-2.1.0.tar.gz
+```
+
+![image-20220706223603690](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220706223610.png)
+
+###### 1.3 修改application.properties进行数据源切换
+
+追加配置：
+
+```shell
+spring.datasource.platform=mysql
+
+db.num=1
+db.url.0=jdbc:mysql://192.168.137.110:3306/nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=true&useUnicode=true&serverTimezone=Asia/Shanghai
+db.user=root
+db.password=root
+```
+
+###### 1.4 启动nacos测试
+
+```shell
+sh /app/tools/springcloud/nacos/bin/startup.sh -m standalone
+```
+
+![image-20220706224346786](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220706224346.png)
+
+浏览器访问[](http://192.168.137.110:8848/nacos)
+
+因为和之前windows上配置的是相同的mysql数据库，所以数据一致的，已经存在了之前保存好的namespace. 切换成功。
+
+![image-20220706224556340](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220706224556.png)
+
+
+
+##### 3、将nacos配置成集群模式，启动多个nacos
+
+###### 1.1 修改cluster.config
+
+备份文件，并添加三个配置
+
+```shell
+[root@localhost bin]# cd ../conf/
+[root@localhost conf]# ls
+1.4.0-ipv6_support-update.sql  application.properties  application.properties.example  cluster.conf.example  nacos-logback.xml  nacos-mysql.sql  schema.sql
+[root@localhost conf]# cp cluster.conf.example cluster.conf
+[root@localhost conf]# vi cluster.conf
+[root@localhost conf]# cat cluster.conf
+192.168.137.110:3333
+192.168.137.110:4444
+192.168.137.110:5555
+```
+
+###### 1.2 修改application.properties
+
+* 1、添加mysql的配置
+
+```properties
+spring.datasource.platform=mysql
+
+db.num=1
+db.url.0=jdbc:mysql://192.168.137.110:3306/nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=true&useUnicode=true&serverTimezone=Asia/Shanghai
+db.user=root
+db.password=root
+```
+
+* 2、修改server.port
+
+```properties
+server.port=3333
+```
+
+![image-20220708165607934](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708165608.png)
+
+###### 1.3 复制压缩后的文件三份，分别为nacos3333，ncaos4444，nacos5555
+
+并分别修改其application.properties中的server.port为3333，4444和5555
+
+![image-20220708165955951](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708165956.png)
+
+
+
+###### 1.4 启动nacos进行测试
+
+```shell
+sh /app/tools/springcloud/nacos3333/bin/startup.sh
+sh /app/tools/springcloud/nacos4444/bin/startup.sh
+sh /app/tools/springcloud/nacos5555/bin/startup.sh
+
+ps -ef|grep nacos|grep -v grep|wc -l   # 查看启动了几个nacos
+```
+
+![image-20220708170120855](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170121.png)
+
+![image-20220708170145514](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170145.png)
+
+##### 4、通过nginx将上述三个nacos进行代理
+
+###### 1.1 安装nginx
+
+> 直接解压即可
+
+###### 1.2 修改nginx.conf
+
+```shell
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+
+    #gzip  on;
+    upstream nacos-cluster {
+        server 192.168.137.110:3333;
+        server 192.168.137.110:4444;
+        server 192.168.137.110:5555;
+    }
+    server {
+        listen    1111;
+        server_name  localhost;
+        location / {
+            proxy_pass http://nacos-cluster;
+        }
+
+
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+
+    }
+
+}
+
+```
+
+![image-20220708124152726](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708124152.png)
+
+###### 1.3 启动nginx测试
+
+```shell
+/usr/local/nginx/sbin/nginx  -c /app/tools/springcloud/nginx-1.18.0/conf/nginx.conf
+
+cd /usr/local/nginx/sbin
+./nginx    # 启动
+./nginx -s stop  #停止
+./nginx -s quit  #安全退出
+./nginx -s reload  #重新加载配置文件
+```
+
+在3台nacos成功启动的基础上，启动好nginx
+
+![image-20220708170348635](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170348.png)
+
+
+
+##### 5、启动3个nacos和1个nginx进行测试
+
+![image-20220708125138586](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708125138.png)
+
+```shell
+# 启动nacos
+sh /app/tools/springcloud/nacos3333/bin/startup.sh
+sh /app/tools/springcloud/nacos4444/bin/startup.sh
+sh /app/tools/springcloud/nacos5555/bin/startup.sh
+# 启动nginx
+/usr/local/nginx/sbin/nginx  -c /app/tools/springcloud/nginx-1.18.0/conf/nginx.conf
+```
+
+![image-20220708170448112](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170448.png)
+
+
+
+关掉nacos5555, 发现页面同时更新。此时并不会影响nacos正常工作。
+
+![image-20220708170635858](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170636.png)
+
+![image-20220708170719892](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170720.png)
+
+
+
+
+
 
 
 ### 二、Sentinel
@@ -5288,3 +5481,275 @@ Assert.notNull(paymentPO, "Could not find related info.");
 
 
 
+## 9、Nacos集群启动三个节点，过一会发现只剩两个了。
+
+```shell
+ps -ef|grep nacos|grep -v grep|wc -l
+```
+
+ 因为nacos比较占用内存，我启动一个差不多1.5G占用，我的CentOS给了2G内存，所以不够用。
+
+解决：
+
+（1）分配大内存
+
+![image-20220707221630564](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220707221637.png)
+
+(2) 调小nacos启动内存参数
+
+![image-20220708093528433](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708093535.png)
+
+（3）还不行就复制三份，修改application.properties的server.port, 分别设置为3333，4444和5555
+
+
+
+## 10、nacos集群结合nginx启动后无法成功代理
+
+报错信息：
+
+![image-20220707222104505](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220707222104.png)
+
+原因：nginx配置错误: 名字加了下划线: nacos_cluster
+
+处理：
+
+![image-20220708093812831](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708093812.png)
+
+修改后重启即可。
+
+## 11、Cloud项目中Nacos2.0.3的nacosClient通过nginx暴露的端口注册nacos集群启动报错。
+
+```shell
+ .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::       (v2.3.12.RELEASE)
+
+2022-07-08 09:31:18.555  INFO 2880 --- [  restartedMain] c.i.s.NacosProvider9002Starter           : No active profile set, falling back to default profiles: default
+2022-07-08 09:31:19.223  WARN 2880 --- [  restartedMain] o.s.boot.actuate.endpoint.EndpointId     : Endpoint ID 'service-registry' contains invalid characters, please migrate to a valid format.
+2022-07-08 09:31:19.293  INFO 2880 --- [  restartedMain] o.s.cloud.context.scope.GenericScope     : BeanFactory id=d9a0d0be-2f15-378c-a47d-5762f76622d9
+2022-07-08 09:31:19.612  INFO 2880 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9002 (http)
+2022-07-08 09:31:19.619  INFO 2880 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2022-07-08 09:31:19.619  INFO 2880 --- [  restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.46]
+2022-07-08 09:31:19.698  INFO 2880 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2022-07-08 09:31:19.698  INFO 2880 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1129 ms
+2022-07-08 09:31:20.509  INFO 2880 --- [  restartedMain] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.
+2022-07-08 09:31:20.510  INFO 2880 --- [  restartedMain] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.
+2022-07-08 09:31:28.185  INFO 2880 --- [  restartedMain] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 18 endpoint(s) beneath base path '/actuator'
+2022-07-08 09:31:28.222  INFO 2880 --- [  restartedMain] pertySourcedRequestMappingHandlerMapping : Mapped URL path [/v2/api-docs] onto method [springfox.documentation.swagger2.web.Swagger2ControllerWebMvc#getDocumentation(String, HttpServletRequest)]
+2022-07-08 09:31:28.232  WARN 2880 --- [  restartedMain] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2022-07-08 09:31:28.232  INFO 2880 --- [  restartedMain] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2022-07-08 09:31:28.234  WARN 2880 --- [  restartedMain] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2022-07-08 09:31:28.234  INFO 2880 --- [  restartedMain] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2022-07-08 09:31:28.285  INFO 2880 --- [  restartedMain] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2022-07-08 09:31:28.305  INFO 2880 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2022-07-08 09:31:28.347  INFO 2880 --- [  restartedMain] o.s.s.c.ThreadPoolTaskScheduler          : Initializing ExecutorService 'Nacos-Watch-Task-Scheduler'
+2022-07-08 09:31:29.265 ERROR 2880 --- [  restartedMain] c.a.cloud.nacos.discovery.NacosWatch     : namingService subscribe failed, properties:NacosDiscoveryProperties{serverAddr='192.168.137.110:1111', endpoint='', namespace='', watchDelay=30000, logName='', service='nacos-payment-provider', weight=1.0, clusterName='DEFAULT', group='DEFAULT_GROUP', namingLoadCacheAtStart='false', metadata={preserved.register.source=SPRING_CLOUD}, registerEnabled=true, ip='192.168.1.3', networkInterface='', port=-1, secure=false, accessKey='', secretKey='', heartBeatInterval=null, heartBeatTimeout=null, ipDeleteTimeout=null, failFast=true}
+
+com.alibaba.nacos.api.exception.NacosException: Request nacos server failed: 
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:288) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.doSubscribe(NamingGrpcClientProxy.java:229) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.subscribe(NamingGrpcClientProxy.java:214) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate.subscribe(NamingClientProxyDelegate.java:147) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.NacosNamingService.subscribe(NacosNamingService.java:393) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.cloud.nacos.discovery.NacosWatch.start(NacosWatch.java:134) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:182) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.access$200(DefaultLifecycleProcessor.java:53) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.start(DefaultLifecycleProcessor.java:360) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.startBeans(DefaultLifecycleProcessor.java:158) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onRefresh(DefaultLifecycleProcessor.java:122) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:895) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:554) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:755) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:747) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:402) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:312) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1247) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1236) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at com.ityj.springcloud.NacosProvider9002Starter.main(NacosProvider9002Starter.java:11) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49) ~[spring-boot-devtools-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected, current status:STARTING
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:651) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:631) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:278) ~[nacos-client-2.1.0.jar:na]
+	... 25 common frames omitted
+
+2022-07-08 09:31:29.282  INFO 2880 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9002 (http) with context path ''
+2022-07-08 09:31:29.589 ERROR 2880 --- [  restartedMain] c.a.c.n.registry.NacosServiceRegistry    : nacos registry, nacos-payment-provider register failed...NacosRegistration{nacosDiscoveryProperties=NacosDiscoveryProperties{serverAddr='192.168.137.110:1111', endpoint='', namespace='', watchDelay=30000, logName='', service='nacos-payment-provider', weight=1.0, clusterName='DEFAULT', group='DEFAULT_GROUP', namingLoadCacheAtStart='false', metadata={preserved.register.source=SPRING_CLOUD}, registerEnabled=true, ip='192.168.1.3', networkInterface='', port=9002, secure=false, accessKey='', secretKey='', heartBeatInterval=null, heartBeatTimeout=null, ipDeleteTimeout=null, failFast=true}},
+
+com.alibaba.nacos.api.exception.NacosException: Request nacos server failed: 
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:288) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.doRegisterService(NamingGrpcClientProxy.java:128) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.registerService(NamingGrpcClientProxy.java:114) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate.registerService(NamingClientProxyDelegate.java:94) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.NacosNamingService.registerInstance(NacosNamingService.java:145) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.cloud.nacos.registry.NacosServiceRegistry.register(NacosServiceRegistry.java:74) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.register(AbstractAutoServiceRegistration.java:239) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at com.alibaba.cloud.nacos.registry.NacosAutoServiceRegistration.register(NacosAutoServiceRegistration.java:78) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.start(AbstractAutoServiceRegistration.java:138) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.bind(AbstractAutoServiceRegistration.java:101) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.onApplicationEvent(AbstractAutoServiceRegistration.java:88) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.onApplicationEvent(AbstractAutoServiceRegistration.java:47) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:172) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:165) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:139) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:404) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:361) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.boot.web.servlet.context.WebServerStartStopLifecycle.start(WebServerStartStopLifecycle.java:46) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:182) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.access$200(DefaultLifecycleProcessor.java:53) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.start(DefaultLifecycleProcessor.java:360) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.startBeans(DefaultLifecycleProcessor.java:158) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onRefresh(DefaultLifecycleProcessor.java:122) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:895) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:554) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:755) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:747) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:402) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:312) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1247) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1236) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at com.ityj.springcloud.NacosProvider9002Starter.main(NacosProvider9002Starter.java:11) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49) ~[spring-boot-devtools-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected, current status:STARTING
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:651) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:631) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:278) ~[nacos-client-2.1.0.jar:na]
+	... 37 common frames omitted
+
+2022-07-08 09:31:29.589  WARN 2880 --- [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is java.lang.reflect.UndeclaredThrowableException
+2022-07-08 09:31:29.590  INFO 2880 --- [  restartedMain] o.s.s.c.ThreadPoolTaskScheduler          : Shutting down ExecutorService 'Nacos-Watch-Task-Scheduler'
+2022-07-08 09:31:29.893 ERROR 2880 --- [  restartedMain] c.a.cloud.nacos.discovery.NacosWatch     : namingService unsubscribe failed, properties:NacosDiscoveryProperties{serverAddr='192.168.137.110:1111', endpoint='', namespace='', watchDelay=30000, logName='', service='nacos-payment-provider', weight=1.0, clusterName='DEFAULT', group='DEFAULT_GROUP', namingLoadCacheAtStart='false', metadata={preserved.register.source=SPRING_CLOUD}, registerEnabled=true, ip='192.168.1.3', networkInterface='', port=9002, secure=false, accessKey='', secretKey='', heartBeatInterval=null, heartBeatTimeout=null, ipDeleteTimeout=null, failFast=true}
+
+com.alibaba.nacos.api.exception.NacosException: Request nacos server failed: 
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:288) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.doUnsubscribe(NamingGrpcClientProxy.java:259) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.unsubscribe(NamingGrpcClientProxy.java:240) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate.unsubscribe(NamingClientProxyDelegate.java:157) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.NacosNamingService.unsubscribe(NacosNamingService.java:417) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.cloud.nacos.discovery.NacosWatch.stop(NacosWatch.java:177) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at com.alibaba.cloud.nacos.discovery.NacosWatch.destroy(NacosWatch.java:207) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:199) ~[spring-beans-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroyBean(DefaultSingletonBeanRegistry.java:587) ~[spring-beans-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingleton(DefaultSingletonBeanRegistry.java:559) ~[spring-beans-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingleton(DefaultListableBeanFactory.java:1092) ~[spring-beans-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingletons(DefaultSingletonBeanRegistry.java:520) ~[spring-beans-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingletons(DefaultListableBeanFactory.java:1085) ~[spring-beans-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1061) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:564) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:755) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:747) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:402) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:312) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1247) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1236) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at com.ityj.springcloud.NacosProvider9002Starter.main(NacosProvider9002Starter.java:11) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49) ~[spring-boot-devtools-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected, current status:STARTING
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:651) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:631) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:278) ~[nacos-client-2.1.0.jar:na]
+	... 27 common frames omitted
+
+2022-07-08 09:31:29.894  INFO 2880 --- [  restartedMain] o.s.s.concurrent.ThreadPoolTaskExecutor  : Shutting down ExecutorService 'applicationTaskExecutor'
+2022-07-08 09:31:30.639  INFO 2880 --- [  restartedMain] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2022-07-08 09:31:30.655  INFO 2880 --- [  restartedMain] ConditionEvaluationReportLoggingListener : 
+
+Error starting ApplicationContext. To display the conditions report re-run your application with 'debug' enabled.
+2022-07-08 09:31:30.668 ERROR 2880 --- [  restartedMain] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is java.lang.reflect.UndeclaredThrowableException
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:185) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.access$200(DefaultLifecycleProcessor.java:53) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.start(DefaultLifecycleProcessor.java:360) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.startBeans(DefaultLifecycleProcessor.java:158) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.onRefresh(DefaultLifecycleProcessor.java:122) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:895) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:554) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:755) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:747) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:402) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:312) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1247) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1236) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at com.ityj.springcloud.NacosProvider9002Starter.main(NacosProvider9002Starter.java:11) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49) ~[spring-boot-devtools-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+Caused by: java.lang.reflect.UndeclaredThrowableException: null
+	at org.springframework.util.ReflectionUtils.rethrowRuntimeException(ReflectionUtils.java:147) ~[spring-core-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at com.alibaba.cloud.nacos.registry.NacosServiceRegistry.register(NacosServiceRegistry.java:82) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.register(AbstractAutoServiceRegistration.java:239) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at com.alibaba.cloud.nacos.registry.NacosAutoServiceRegistration.register(NacosAutoServiceRegistration.java:78) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.start(AbstractAutoServiceRegistration.java:138) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.bind(AbstractAutoServiceRegistration.java:101) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.onApplicationEvent(AbstractAutoServiceRegistration.java:88) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.onApplicationEvent(AbstractAutoServiceRegistration.java:47) ~[spring-cloud-commons-2.2.9.RELEASE.jar:2.2.9.RELEASE]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:172) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:165) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:139) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:404) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:361) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	at org.springframework.boot.web.servlet.context.WebServerStartStopLifecycle.start(WebServerStartStopLifecycle.java:46) ~[spring-boot-2.3.12.RELEASE.jar:2.3.12.RELEASE]
+	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:182) ~[spring-context-5.2.15.RELEASE.jar:5.2.15.RELEASE]
+	... 19 common frames omitted
+Caused by: com.alibaba.nacos.api.exception.NacosException: Request nacos server failed: 
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:288) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.doRegisterService(NamingGrpcClientProxy.java:128) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.registerService(NamingGrpcClientProxy.java:114) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate.registerService(NamingClientProxyDelegate.java:94) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.NacosNamingService.registerInstance(NacosNamingService.java:145) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.cloud.nacos.registry.NacosServiceRegistry.register(NacosServiceRegistry.java:74) ~[spring-cloud-starter-alibaba-nacos-discovery-2.2.7.RELEASE.jar:2.2.7.RELEASE]
+	... 32 common frames omitted
+Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected, current status:STARTING
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:651) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.common.remote.client.RpcClient.request(RpcClient.java:631) ~[nacos-client-2.1.0.jar:na]
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.requestToServer(NamingGrpcClientProxy.java:278) ~[nacos-client-2.1.0.jar:na]
+	... 37 common frames omitted
+
+2022-07-08 09:31:30.671  WARN 2880 --- [      Thread-11] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Start destroying common HttpClient
+2022-07-08 09:31:30.671  WARN 2880 --- [       Thread-8] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Start destroying Publisher
+2022-07-08 09:31:30.671  WARN 2880 --- [       Thread-8] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Destruction of the end
+2022-07-08 09:31:30.672  WARN 2880 --- [      Thread-11] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Destruction of the end
+```
+
+![image-20220708094225992](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708094226.png)
+
+根据官网的意思2.x后需要暴露两个端口，但是我Linux防火墙已经关掉了，并且页面可以正常访问，很奇怪。还没有完美的解决方案。
+
+`https://nacos.io/zh-cn/docs/2.0.0-compatibility.html`
+
+处理方法：
+
+### 1. 降低nacos.client版本
+
+![image-20220708094528862](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708094529.png)
+
+
+
+### 2.client还是用2xx版本，不适用nginx代理，直接把nacos集群的IP用逗号隔开
+
+> 暂时用这种吧
+
+![image-20220708094759415](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708094759.png)

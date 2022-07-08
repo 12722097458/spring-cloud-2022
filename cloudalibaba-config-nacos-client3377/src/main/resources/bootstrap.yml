@@ -8,12 +8,12 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
       config:
-        server-addr: localhost:8848
+        server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
         file-extension: yaml
         group: DEV_GROUP
-        namespace: feb6f605-cefb-4941-a53f-84d78c855fbc
+        namespace: 2ebaaee6-2a7e-4e6d-ba41-627cd26c9036
 
 management:
   endpoints:
