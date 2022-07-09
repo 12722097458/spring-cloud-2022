@@ -64,9 +64,28 @@ java -jar zipkin-server-2.12.9-exec.jar
 >
 > 服务发现、服务配置 = Eureka + Config&Bus
 
+## 1、Windows单机版
+
 ```shell
 cd D:\Java\cloud-alibaba\nacos-server-2.1.0\nacos\bin
 startup.cmd -m standalone    # 以单机模式启动
+```
+
+## 2、Linux集群版
+
+```shell
+# 启动nacos
+sh /app/tools/springcloud/nacos-scripts/nacos-cluster-startup.sh
+# 启动nginx
+/usr/local/nginx/sbin/nginx  -c /app/tools/springcloud/nginx-1.18.0/conf/nginx.conf
+```
+
+
+
+# 7、Sentinel
+
+```shell
+java -jar D:\Java\cloud-alibaba\sentinel-dashboard-1.8.4.jar
 ```
 
 

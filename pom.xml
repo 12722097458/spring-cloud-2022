@@ -50,7 +50,8 @@
 		<module>cloudalibaba-provider-payment9002</module>
 		<module>cloudalibaba-consumer-nacos-order83</module>
         <module>cloudalibaba-config-nacos-client3377</module>
-    </modules>
+		<module>cloudalibaba-sentinel-service8401</module>
+	</modules>
 
 	<!-- 子模块继承之后，提供作用：锁定版本+子module不用写groupId和version
 	  	  只提供声明，对应的依赖没有引入

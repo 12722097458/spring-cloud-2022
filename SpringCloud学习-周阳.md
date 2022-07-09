@@ -4785,6 +4785,8 @@ sh /app/tools/springcloud/nacos5555/bin/startup.sh
 /usr/local/nginx/sbin/nginx  -c /app/tools/springcloud/nginx-1.18.0/conf/nginx.conf
 ```
 
+
+
 ![image-20220708170448112](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708170448.png)
 
 
@@ -4797,10 +4799,6 @@ sh /app/tools/springcloud/nacos5555/bin/startup.sh
 
 
 
-
-
-
-
 ### 二、Sentinel
 
 >  一句话解释，之前我们讲解过的Hystrix
@@ -4809,7 +4807,9 @@ sh /app/tools/springcloud/nacos5555/bin/startup.sh
 
 其实就是有一个jar包，运行即可，默认端口为8080。
 
-![image-20210302131312295](D:\我的文件\gitRepository\cloud-image\img\image-20210302131312295.png)
+> https://github.com/alibaba/Sentinel/releases/tag/1.8.4
+
+![image-20220709154717834](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220709154725.png)
 
 
 
@@ -4827,9 +4827,9 @@ cloudalibaba-sentinel-service8401
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>springcloud-0219-00</artifactId>
+        <artifactId>spring-cloud-2022</artifactId>
         <groupId>com.ityj.springcloud</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -4839,7 +4839,7 @@ cloudalibaba-sentinel-service8401
         <dependency>
             <groupId>com.ityj.springcloud</groupId>
             <artifactId>cloud-api-commons</artifactId>
-            <version>${project.version}</version>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -4847,54 +4847,18 @@ cloudalibaba-sentinel-service8401
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-datasource-nacos</artifactId>
-        </dependency>
-
+        <!--新增sentinel依赖-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
         </dependency>
 
+        <!--后续持久化需要-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>4.6.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
-
 </project>
 ```
 
@@ -4910,10 +4874,10 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
     sentinel:
       transport:
-        dashboard: localhost:8080
+        dashboard: localhost:8080  # sentinel dashboard的路径
         port: 8719  #默认8719，假如被占用了会自动从8719开始依次+1扫描。直至找到未被占用的端口
 
 management:
@@ -4928,10 +4892,9 @@ management:
 ```java
 @SpringBootApplication
 @EnableDiscoveryClient
-public class Sentinel8401Starter {
+public class SentinelService8401Starter {
     public static void main(String[] args) {
-        SpringApplication.run(Sentinel8401Starter.class, args);
-
+        SpringApplication.run(SentinelService8401Starter.class, args);
     }
 }
 ```
@@ -4958,11 +4921,11 @@ public class FlowLimitController {
 
 （6）测试
 
-启动Nacos，再启动Sentinel，最后启动8401
+启动Nacos集群，再启动Sentinel，最后启动8401
 
 启动成功后，在Nacos服务注册中心可以看到8401的服务；
 
-而sentinel的控制台并没有发现有信息：主要是sentinel是属于懒加载，只有服务访问了，才可以看到。
+而sentinel的控制台并没有发现有信息：主要是sentinel是属于懒加载(Sentinel1.8.4会直接注册了)，只有服务访问了，才可以看到。
 
 访问http://localhost:8401/testA和http://localhost:8401/testB后，可以看到控制台有对这两个接口的监控详细信息。
 
@@ -5753,3 +5716,28 @@ Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected,
 > 暂时用这种吧
 
 ![image-20220708094759415](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708094759.png)
+
+
+
+### 12、Sentinel Dashboard 无法监控配置好的服务
+
+最终发现是pom文件有问题，坐标写错了。IDEA也没有标红
+
+错误：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+</dependency>
+```
+
+正确：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+</dependency>
+```
+
