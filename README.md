@@ -29,6 +29,8 @@ docker start zookeeper-standalone
 通过docker安装并启动。
 已经有了name=consul-dev的应用，直接启动即可
 docker start consul-dev
+
+http://192.168.137.110:8500/
 ```
 
 
@@ -69,6 +71,8 @@ java -jar zipkin-server-2.12.9-exec.jar
 ```shell
 cd D:\Java\cloud-alibaba\nacos-server-2.1.0\nacos\bin
 startup.cmd -m standalone    # 以单机模式启动
+
+http://localhost:8848/nacos
 ```
 
 ## 2、Linux集群版
@@ -78,6 +82,9 @@ startup.cmd -m standalone    # 以单机模式启动
 sh /app/tools/springcloud/nacos-scripts/nacos-cluster-startup.sh
 # 启动nginx
 /usr/local/nginx/sbin/nginx  -c /app/tools/springcloud/nginx-1.18.0/conf/nginx.conf
+
+#linux配置的端口1111
+http://192.168.137.110:1111/nacos
 ```
 
 
@@ -86,7 +93,15 @@ sh /app/tools/springcloud/nacos-scripts/nacos-cluster-startup.sh
 
 ```shell
 java -jar D:\Java\cloud-alibaba\sentinel-dashboard-1.8.4.jar
+
+http://localhost:8080/    # sentinel/sentinel
 ```
 
 
+
+# 8、jemter压测工具
+
+```shell
+D:\Java\tools-windows\apache-jmeter-5.4.1\bin\jmeter.sh
+```
 

@@ -1,8 +1,6 @@
 server:
   port: 8401
 
-
-
 spring:
   application:
     name: cloudalibaba-sentinel-service
@@ -10,6 +8,7 @@ spring:
     nacos:
       discovery:
         server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
+        group: DEV_GROUP
     sentinel:
       transport:
         dashboard: 127.0.0.1:8080  # sentinel dashboard的路径

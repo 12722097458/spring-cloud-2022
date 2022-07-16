@@ -4921,11 +4921,11 @@ public class FlowLimitController {
 
 （6）测试
 
-启动Nacos集群，再启动Sentinel，最后启动8401
+启动Nacos集群，再启动Sentinel，最后启动8401(Sentinel可以不依赖于nacos, 独立运行)
 
 启动成功后，在Nacos服务注册中心可以看到8401的服务；
 
-而sentinel的控制台并没有发现有信息：主要是sentinel是属于懒加载(Sentinel1.8.4会直接注册了)，只有服务访问了，才可以看到。
+而sentinel的控制台并没有发现有信息：主要是sentinel是属于懒加载，只有服务访问了，才可以看到。
 
 访问http://localhost:8401/testA和http://localhost:8401/testB后，可以看到控制台有对这两个接口的监控详细信息。
 
@@ -4974,7 +4974,39 @@ public String testB() {
 
 ![image-20210302143943601](D:\我的文件\gitRepository\cloud-image\img\image-20210302143943601.png)
 
-##### （3）关联模式
+##### （3）流控效果-Warm Up
+
+![image-20210302150430692](D:\我的文件\gitRepository\cloud-image\img\image-20210302150430692.png)
+
+静置一段时间后初次访问开始计算
+
+前5秒为预热时间，这段时间的请求阈值是    10  /   3   =  3；其中10是设置的，3是系统默认的coldFactor
+
+超过5秒，回归正常的阈值设置10；查过10的QPS将会限流
+
+![image-20210302151243157](D:\我的文件\gitRepository\cloud-image\img\image-20210302151243157.png)
+
+
+
+
+
+![image-20210302151452841](D:\我的文件\gitRepository\cloud-image\img\image-20210302151452841.png)
+
+**应用场景：**
+
+![image-20210303082650279](D:\我的文件\gitRepository\cloud-image\img\image-20210303082650279.png)
+
+##### （4）流控效果-排队等待
+
+> testB接口每秒只支持执行一次，多余的接口会排队等待，超时时间为500ms
+
+![image-20220710112115094](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220710112122.png)
+
+![image-20220710112331427](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220710112331.png)
+
+
+
+##### （5）关联模式
 
 A关联B，如果B的QPS查过阈值，A将会限流报错。
 
@@ -5017,29 +5049,9 @@ public String testB() {
 
 A直接被限流，当B执行完毕（没有高并发访问）时，A可以再次正常运行。
 
-##### （4）流控效果-Warm Up
+#### 4、Sentinel熔断降级
 
-![image-20210302150430692](D:\我的文件\gitRepository\cloud-image\img\image-20210302150430692.png)
-
-静置一段时间后初次访问开始计算
-
-前5秒为预热时间，这段时间的请求阈值是    10  /   3   =  3；其中10是设置的，3是系统默认的coldFactor
-
-超过5秒，回归正常的阈值设置10；查过10的QPS将会限流
-
-![image-20210302151243157](D:\我的文件\gitRepository\cloud-image\img\image-20210302151243157.png)
-
-
-
-
-
-![image-20210302151452841](D:\我的文件\gitRepository\cloud-image\img\image-20210302151452841.png)
-
-**应用场景：**
-
-![image-20210303082650279](D:\我的文件\gitRepository\cloud-image\img\image-20210303082650279.png)
-
-#### 4、Sentinel降级
+> 1.8+有了新的改版：https://github.com/alibaba/Sentinel/wiki/%E7%86%94%E6%96%AD%E9%99%8D%E7%BA%A7
 
 ![image-20210303090210435](D:\我的文件\gitRepository\cloud-image\img\image-20210303090210435.png)
 
@@ -5083,6 +5095,8 @@ public String testD() {
 
 ##### （2）异常比例
 
+> 不要加异常处理器ExceptionHandler，否则不会被认为是异常
+
 ![image-20210303094054649](C:/Users/ayinj/AppData/Roaming/Typora/typora-user-images/image-20210303094054649.png)
 
 ![image-20210303094105415](D:\我的文件\gitRepository\cloud-image\img\image-20210303094105415.png)
@@ -5112,41 +5126,43 @@ public String testD() {
 （1）写业务
 
 ```java
+@SentinelResource(value = "testHotKey", fallback = "hotKey_fallBack")
 @GetMapping("/testHotKey")
-@SentinelResource(value = "testHotKey",blockHandler = "deal_testHotKey")
-public String testHotKey(@RequestParam(value = "p1",required = false) String p1,
-                         @RequestParam(value = "p2",required = false) String p2) {
-    int age = 1/0;
-    return "------testHotKey";
+public String testHotKey(@RequestParam(value = "id", required = false) String id,
+                         @RequestParam(value = "name", required = false)  String name) {
+    return "------testHotKey:" + id + name;
 }
 
-//兜底方法
-public String deal_testHotKey (String p1, String p2, BlockException exception){
-    return "------deal_testHotKey,o(╥﹏╥)o";
+public String hotKey_fallBack(String id, String name) {
+    return "------hotKey_fallBack";
 }
 ```
 
 （2）在sentinel配置页面配置
 
-在访问带有p1参数的请求：http://localhost:8401/testHotKey?p1=22，如果一分钟请求数大于1，在接下来的统计窗口1秒中，会走兜底方法，而不是Whitelabel Error Page
+在访问带有p1参数的请求：http://localhost:8401/testHotKey?id=22，如果一分钟请求数大于1，在接下来的统计窗口1秒中，会走兜底方法，而不是Whitelabel Error Page
 
-![image-20210303100231518](D:\我的文件\gitRepository\cloud-image\img\image-20210303100231518.png)
+![image-20220716180510867](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220716180518.png)
 
 
 
 ##### 2、热点限流设置白名单
 
-如果说http://localhost:8401/testHotKey?p1=666的请求p1=666为白名单，就是说访问http://localhost:8401/testHotKey?p1=666时，会有一个新的自定义的阈值条件，达到此条件会走兜底方法。
+如果说http://localhost:8401/testHotKey?id=666的请求p1=666为白名单，就是说访问http://localhost:8401/testHotKey?id=666时，会有一个新的自定义的阈值条件，达到此条件会走兜底方法。
 
 配置即可：
 
 ![image-20210303101113651](D:\我的文件\gitRepository\cloud-image\img\image-20210303101113651.png)
 
-测试http://localhost:8401/testHotKey?p1=666和http://localhost:8401/testHotKey?p1=222
+测试http://localhost:8401/testHotKey?id=666和http://localhost:8401/testHotKey?id=123
 
 发现666不会走兜底策略（访问没到200阈值）
 
-而p1=222直接很快进入兜底方法。
+而p1=123直接很快进入兜底方法。
+
+![image-20220716180704206](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220716180704.png)
+
+
 
 #### 6、系统规则
 
