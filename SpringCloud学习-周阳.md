@@ -5170,11 +5170,11 @@ public String hotKey_fallBack(String id, String name) {
 
 ![image-20210303103254176](D:\我的文件\gitRepository\cloud-image\img\image-20210303103254176.png)
 
-http://localhost:8401/testHotKey?p1=666
+http://localhost:8401/testA
 
-![image-20210303103306004](D:\我的文件\gitRepository\cloud-image\img\image-20210303103306004.png)
+![image-20220716183000457](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220716183000.png)
 
-最好不要使用。
+最好不要使用，范围太大。
 
 
 
@@ -5260,6 +5260,11 @@ http://localhost:8401/rateLimit/byUrl
 （1）自定义的全局兜底策略
 
 ```java
+    /*
+    *  1. 必须是 static
+    *   com.alibaba.csp.sentinel.annotation.aspectj.SentinelResourceAspect.invokeResourceWithSentinel
+    *  2. 最后一个参数必须是BlockException，并且前面的参数要和原方法保持一致
+    * */
 public class CustomerBlockHandler {
 
     public static CommonResult handleException(BlockException exception) {
