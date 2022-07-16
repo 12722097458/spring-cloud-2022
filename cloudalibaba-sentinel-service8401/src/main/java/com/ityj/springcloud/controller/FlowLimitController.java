@@ -1,6 +1,7 @@
 package com.ityj.springcloud.controller;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,7 +53,7 @@ public class FlowLimitController {
         return "------testHotKey:" + id + name;
     }
 
-    public String hotKey_blockHandler(String id, String name) {
+    public String hotKey_blockHandler(String id, String name, BlockException e) {
         return "------hotKey_blockHandler";
     }
 
