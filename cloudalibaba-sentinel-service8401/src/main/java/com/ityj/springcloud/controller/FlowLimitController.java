@@ -45,15 +45,15 @@ public class FlowLimitController {
         return "------sleep";
     }
 
-    @SentinelResource(value = "testHotKey", fallback = "hotKey_fallBack")
+    @SentinelResource(value = "testHotKey", blockHandler = "hotKey_blockHandler")
     @GetMapping("/testHotKey")
     public String testHotKey(@RequestParam(value = "id", required = false) String id,
                              @RequestParam(value = "name", required = false)  String name) {
         return "------testHotKey:" + id + name;
     }
 
-    public String hotKey_fallBack(String id, String name) {
-        return "------hotKey_fallBack";
+    public String hotKey_blockHandler(String id, String name) {
+        return "------hotKey_blockHandler";
     }
 
 }
