@@ -5303,6 +5303,72 @@ http://localhost:8401/rateLimit/customerBlockHandler
 
 > 整合openfeign，结合blockHandler和fallback实现高可用
 
+[代码提交链接](https://github.com/12722097458/spring-cloud-2022/commit/50b95bf18cc5c543fd2a815fda5661c26dd2223c)
+
+
+
+#### 9、规则持久化
+
+> Sentinel目前配置的规则并未进行持久化，一旦项目重启，规则将消失。
+
+解决方法：可以存到某些持久化容器里，或者数据库。官方推荐通过nacos进行存储（就是持久化到Mysql中了）
+
+==将cloudalibaba-consumer-nacos-order84的payment/get/{id}持久化到nacos的步骤==
+
+##### （1）添加依赖
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+</dependency>
+```
+
+##### （2）添加配置
+
+```yml
+spring:
+  cloud:
+    sentinel:
+      datasource:
+        ds1:
+          nacos:
+            server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
+            dataid: ${spring.application.name}
+            groupid: DEFAULT_GROUP
+            data-type: json
+            rule-type: flow
+
+```
+
+##### （3）nacos控制台添加配置
+
+```json
+[
+    {
+         "resource": "payment/get/{id}",
+         "limitApp": "default",
+         "grade":   1,
+         "count":   1,
+         "strategy": 0,
+         "controlBehavior": 0,
+         "clusterMode": false    
+    }
+]
+```
+
+![image-20220717114503047](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220717114510.png)
+
+![image-20220717114627256](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220717114627.png)
+
+
+
+##### （4）测试
+
+启动对应的应用后，访问`http://localhost:84/consumer/payment/get/555`发现限流规则已生效。
+
+Sentinel的dashboard也显示出了限流规则。重启后依然生效。（记着访问几次对应的请求)![image-20220717115028033](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220717115028.png)
+
 
 
 ### 三、Seata
