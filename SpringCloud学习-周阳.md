@@ -5299,6 +5299,12 @@ http://localhost:8401/rateLimit/customerBlockHandler
 
 
 
+#### 8、服务熔断功能
+
+> 整合openfeign，结合blockHandler和fallback实现高可用
+
+
+
 ### 三、Seata
 
 ![image-20210303152332757](D:\我的文件\gitRepository\cloud-image\img\image-20210303152332757.png)

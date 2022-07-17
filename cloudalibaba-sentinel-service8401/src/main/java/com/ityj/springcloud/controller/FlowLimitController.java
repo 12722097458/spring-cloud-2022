@@ -36,7 +36,10 @@ public class FlowLimitController {
     }
 
     @GetMapping("/sleep")
-    public String sleep() {
+    public String sleep(@RequestParam(value = "success", defaultValue = "false") boolean success) {
+        if (success) {
+            return "skip sleep ....";
+        }
         try {
             TimeUnit.MILLISECONDS.sleep(600);
         } catch (InterruptedException e) {

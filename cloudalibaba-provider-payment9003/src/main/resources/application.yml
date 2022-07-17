@@ -1,0 +1,17 @@
+server:
+  port: 9003
+
+spring:
+  application:
+    name: nacos-payment-provider
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555          # Linux配置到nacos集群
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
