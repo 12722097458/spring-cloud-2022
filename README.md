@@ -11,7 +11,7 @@ Learning Spring Cloud
 
 
 
-# 2、zookeeper
+# 2、zookeeper服务注册与发现
 
 ```shell
 通过docker安装并启动。
@@ -21,7 +21,7 @@ docker start zookeeper-standalone
 
 
 
-# 3、consul
+# 3、consul服务注册与发现
 
 本机IP：192.168.1.8
 
@@ -48,7 +48,7 @@ server默认端口5672
 
 
 
-# 5、Sleuth & Zipkin
+# 5、Sleuth & Zipkin分布式请求链路追踪
 
 Sleuth通过Zipkin提供的jar包可以实现链路追踪
 
@@ -60,7 +60,7 @@ java -jar zipkin-server-2.12.9-exec.jar
 
 
 
-# 6、Nacos
+# 6、Nacos服务注册和配置中心
 
 > Dynamic *Na*ming and *Co*nfiguration *S*ervice
 >
@@ -89,7 +89,9 @@ http://192.168.137.110:1111/nacos
 
 
 
-# 7、Sentinel
+# 7、Sentinel熔断限流
+
+> 替代Hystrix
 
 ```shell
 java -jar D:\Java\cloud-alibaba\sentinel-dashboard-1.8.4.jar
@@ -104,4 +106,16 @@ http://localhost:8080/    # sentinel/sentinel
 ```shell
 D:\Java\tools-windows\apache-jmeter-5.4.1\bin\jmeter.sh
 ```
+
+
+
+# 9、Seata分布式事务
+
+> 需要依赖mysql和nacos
+
+```shell
+D:\Java\cloud-alibaba\seata\seata-server-1.4.2\bin\seata-server.bat
+```
+
+
 

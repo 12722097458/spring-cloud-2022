@@ -5373,7 +5373,728 @@ Sentinel的dashboard也显示出了限流规则。重启后依然生效。（记
 
 ### 三、Seata
 
-![image-20210303152332757](D:\我的文件\gitRepository\cloud-image\img\image-20210303152332757.png)
+#### 1、Seata Server本地启动
+
+> * 这里Seata Server版本是1.4.2
+> * 持久化选择的工具是Mysql
+>   * 192.168.137.110:3306    root/root
+> * 注册中心使用的是Nacos集群
+>   * 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
+
+##### （1）下载seata-1.4.2.zip
+
+```shell
+https://github.com/seata/seata/releases/tag/v1.4.2
+```
+
+##### （2）创建对应的数据表
+
+在D:\Java\cloud-alibaba\seata\seata-server-1.4.2\conf中有一个README-zh.md文件，在server模块超链接[server](https://github.com/seata/seata/tree/develop/script/server)，进入db目录，复制mysql.sql中的文件，创建这三张表。需要先创建一个database. 我这里的名字是db_seata
+
+```sql
+-- -------------------------------- The script used when storeMode is 'db' --------------------------------
+-- the table to store GlobalSession data
+CREATE TABLE IF NOT EXISTS `global_table`
+(
+    `xid`                       VARCHAR(128) NOT NULL,
+    `transaction_id`            BIGINT,
+    `status`                    TINYINT      NOT NULL,
+    `application_id`            VARCHAR(32),
+    `transaction_service_group` VARCHAR(32),
+    `transaction_name`          VARCHAR(128),
+    `timeout`                   INT,
+    `begin_time`                BIGINT,
+    `application_data`          VARCHAR(2000),
+    `gmt_create`                DATETIME,
+    `gmt_modified`              DATETIME,
+    PRIMARY KEY (`xid`),
+    KEY `idx_status_gmt_modified` (`status` , `gmt_modified`),
+    KEY `idx_transaction_id` (`transaction_id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- the table to store BranchSession data
+CREATE TABLE IF NOT EXISTS `branch_table`
+(
+    `branch_id`         BIGINT       NOT NULL,
+    `xid`               VARCHAR(128) NOT NULL,
+    `transaction_id`    BIGINT,
+    `resource_group_id` VARCHAR(32),
+    `resource_id`       VARCHAR(256),
+    `branch_type`       VARCHAR(8),
+    `status`            TINYINT,
+    `client_id`         VARCHAR(64),
+    `application_data`  VARCHAR(2000),
+    `gmt_create`        DATETIME(6),
+    `gmt_modified`      DATETIME(6),
+    PRIMARY KEY (`branch_id`),
+    KEY `idx_xid` (`xid`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- the table to store lock data
+CREATE TABLE IF NOT EXISTS `lock_table`
+(
+    `row_key`        VARCHAR(128) NOT NULL,
+    `xid`            VARCHAR(128),
+    `transaction_id` BIGINT,
+    `branch_id`      BIGINT       NOT NULL,
+    `resource_id`    VARCHAR(256),
+    `table_name`     VARCHAR(32),
+    `pk`             VARCHAR(36),
+    `status`         TINYINT      NOT NULL DEFAULT '0' COMMENT '0:locked ,1:rollbacking',
+    `gmt_create`     DATETIME,
+    `gmt_modified`   DATETIME,
+    PRIMARY KEY (`row_key`),
+    KEY `idx_status` (`status`),
+    KEY `idx_branch_id` (`branch_id`),
+    KEY `idx_xid` (`xid`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `distributed_lock`
+(
+    `lock_key`       CHAR(20) NOT NULL,
+    `lock_value`     VARCHAR(20) NOT NULL,
+    `expire`         BIGINT,
+    primary key (`lock_key`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('AsyncCommitting', ' ', 0);
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('RetryCommitting', ' ', 0);
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('RetryRollbacking', ' ', 0);
+INSERT INTO `distributed_lock` (lock_key, lock_value, expire) VALUES ('TxTimeoutCheck', ' ', 0);
+
+```
+
+
+
+##### （3）修改conf/file.conf文件
+
+文件路径为D:\Java\cloud-alibaba\seata\seata-server-1.4.2\conf\file.conf
+
+**将store.mode改为db以及修改对应的数据库连接信息**
+
+![image-20220730113242165](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730113249.png)
+
+```shell
+## transaction log store, only used in seata-server
+store {
+  ## store mode: file、db、redis
+  mode = "db"
+  ## rsa decryption public key
+  publicKey = ""
+  ## file store property
+  file {
+    ## store location dir
+    dir = "sessionStore"
+    # branch session size , if exceeded first try compress lockkey, still exceeded throws exceptions
+    maxBranchSessionSize = 16384
+    # globe session size , if exceeded throws exceptions
+    maxGlobalSessionSize = 512
+    # file buffer size , if exceeded allocate new buffer
+    fileWriteBufferCacheSize = 16384
+    # when recover batch read size
+    sessionReloadReadSize = 100
+    # async, sync
+    flushDiskMode = async
+  }
+
+  ## database store property
+  db {
+    ## the implement of javax.sql.DataSource, such as DruidDataSource(druid)/BasicDataSource(dbcp)/HikariDataSource(hikari) etc.
+    datasource = "druid"
+    ## mysql/oracle/postgresql/h2/oceanbase etc.
+    dbType = "mysql"
+    driverClassName = "com.mysql.cj.jdbc.Driver"
+    ## if using mysql to store the data, recommend add rewriteBatchedStatements=true in jdbc connection param
+    url = "jdbc:mysql://192.168.137.110:3306/db_seata?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai"
+    user = "root"
+    password = "root"
+    minConn = 5
+    maxConn = 100
+    globalTable = "global_table"
+    branchTable = "branch_table"
+    lockTable = "lock_table"
+    queryLimit = 100
+    maxWait = 5000
+  }
+
+  ## redis store property
+  redis {
+    ## redis mode: single、sentinel
+    mode = "single"
+    ## single mode property
+    single {
+      host = "127.0.0.1"
+      port = "6379"
+    }
+    ## sentinel mode property
+    sentinel {
+      masterName = ""
+      ## such as "10.28.235.65:26379,10.28.235.65:26380,10.28.235.65:26381"
+      sentinelHosts = ""
+    }
+    password = ""
+    database = "0"
+    minConn = 1
+    maxConn = 10
+    maxTotal = 100
+    queryLimit = 100
+  }
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+nacos添加配置
+
+```shell
+Data ID: seataServer.properties
+Group: SEATA_GROUP
+内容：
+transport.type=TCP
+transport.server=NIO
+transport.heartbeat=true
+transport.enableClientBatchSendRequest=true
+transport.threadFactory.bossThreadPrefix=NettyBoss
+transport.threadFactory.workerThreadPrefix=NettyServerNIOWorker
+transport.threadFactory.serverExecutorThreadPrefix=NettyServerBizHandler
+transport.threadFactory.shareBossWorker=false
+transport.threadFactory.clientSelectorThreadPrefix=NettyClientSelector
+transport.threadFactory.clientSelectorThreadSize=1
+transport.threadFactory.clientWorkerThreadPrefix=NettyClientWorkerThread
+transport.threadFactory.bossThreadSize=1
+transport.threadFactory.workerThreadSize=default
+transport.shutdown.wait=3
+transport.serialization=seata
+transport.compressor=none
+# server
+server.recovery.committingRetryPeriod=1000
+server.recovery.asynCommittingRetryPeriod=1000
+server.recovery.rollbackingRetryPeriod=1000
+server.recovery.timeoutRetryPeriod=1000
+server.undo.logSaveDays=7
+server.undo.logDeletePeriod=86400000
+server.maxCommitRetryTimeout=-1
+server.maxRollbackRetryTimeout=-1
+server.rollbackRetryTimeoutUnlockEnable=false
+server.distributedLockExpireTime=10000
+# store
+#model改为db
+store.mode=db
+store.lock.mode=file
+store.session.mode=file
+# store.publicKey=""
+store.file.dir=file_store/data
+store.file.maxBranchSessionSize=16384
+store.file.maxGlobalSessionSize=512
+store.file.fileWriteBufferCacheSize=16384
+store.file.flushDiskMode=async
+store.file.sessionReloadReadSize=100
+store.db.datasource=druid
+store.db.dbType=mysql
+#修改数据驱动，这里是mysql8，使用mysql5的话请修改
+store.db.driverClassName=com.mysql.cj.jdbc.Driver
+# 改为上面创建的seata服务数据库
+store.db.url=jdbc:mysql://192.168.137.110:3306/db_seata?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+# 改为自己的数据库用户名
+store.db.user=root
+# 改为自己的数据库密码
+store.db.password=root
+store.db.minConn=5
+store.db.maxConn=30
+store.db.globalTable=global_table
+store.db.branchTable=branch_table
+store.db.distributedLockTable=distributed_lock
+store.db.queryLimit=100
+store.db.lockTable=lock_table
+store.db.maxWait=5000
+store.redis.mode=single
+store.redis.single.host=127.0.0.1
+store.redis.single.port=6379
+# store.redis.sentinel.masterName=""
+# store.redis.sentinel.sentinelHosts=""
+store.redis.maxConn=10
+store.redis.minConn=1
+store.redis.maxTotal=100
+store.redis.database=0
+# store.redis.password=""
+store.redis.queryLimit=100
+# log
+log.exceptionRate=100
+# metrics
+metrics.enabled=false
+metrics.registryType=compact
+metrics.exporterList=prometheus
+metrics.exporterPrometheusPort=9898
+# service
+# 自己命名一个vgroupMapping   my_test_tx_group等下要用到  重中之重
+service.vgroupMapping.my_test_tx_group=default
+service.default.grouplist=127.0.0.1:8091
+service.enableDegrade=false
+service.disableGlobalTransaction=false
+# client
+client.rm.asyncCommitBufferLimit=10000
+client.rm.lock.retryInterval=10
+client.rm.lock.retryTimes=30
+client.rm.lock.retryPolicyBranchRollbackOnConflict=true
+client.rm.reportRetryCount=5
+client.rm.tableMetaCheckEnable=false
+client.rm.tableMetaCheckerInterval=60000
+client.rm.sqlParserType=druid
+client.rm.reportSuccessEnable=false
+client.rm.sagaBranchRegisterEnable=false
+client.rm.tccActionInterceptorOrder=-2147482648
+client.tm.commitRetryCount=5
+client.tm.rollbackRetryCount=5
+client.tm.defaultGlobalTransactionTimeout=60000
+client.tm.degradeCheck=false
+client.tm.degradeCheckAllowTimes=10
+client.tm.degradeCheckPeriod=2000
+client.tm.interceptorOrder=-2147482648
+client.undo.dataValidation=true
+client.undo.logSerialization=jackson
+client.undo.onlyCareUpdateColumns=true
+client.undo.logTable=undo_log
+client.undo.compress.enable=true
+client.undo.compress.type=zip
+client.undo.compress.threshold=64k
+```
+
+
+
+##### （4）修改conf/registry.conf文件
+
+文件路径为D:\Java\cloud-alibaba\seata\seata-server-1.4.2\conf\registry.conf
+
+**修改registry和config标签下的type=nacos以及具体nacos配置信息**
+
+![image-20220730114300528](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730114300.png)
+
+```shell
+registry {
+  # file 、nacos 、eureka、redis、zk、consul、etcd3、sofa
+  type = "nacos"
+
+  nacos {
+    application = "seata-server"
+    serverAddr = "192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555"
+    group = "SEATA_GROUP"
+    namespace = "34ebbd28-87c2-4e08-8295-d5873d10f079"
+    cluster = "default"
+    username = "nacos"
+    password = "nacos"
+  }
+  eureka {
+    serviceUrl = "http://localhost:8761/eureka"
+    application = "default"
+    weight = "1"
+  }
+  redis {
+    serverAddr = "localhost:6379"
+    db = 0
+    password = ""
+    cluster = "default"
+    timeout = 0
+  }
+  zk {
+    cluster = "default"
+    serverAddr = "127.0.0.1:2181"
+    sessionTimeout = 6000
+    connectTimeout = 2000
+    username = ""
+    password = ""
+  }
+  consul {
+    cluster = "default"
+    serverAddr = "127.0.0.1:8500"
+    aclToken = ""
+  }
+  etcd3 {
+    cluster = "default"
+    serverAddr = "http://localhost:2379"
+  }
+  sofa {
+    serverAddr = "127.0.0.1:9603"
+    application = "default"
+    region = "DEFAULT_ZONE"
+    datacenter = "DefaultDataCenter"
+    cluster = "default"
+    group = "SEATA_GROUP"
+    addressWaitTime = "3000"
+  }
+  file {
+    name = "file.conf"
+  }
+}
+
+config {
+  # file、nacos 、apollo、zk、consul、etcd3
+  type = "nacos"
+
+  nacos {
+    serverAddr = "192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555"
+    namespace = "34ebbd28-87c2-4e08-8295-d5873d10f079"
+    group = "SEATA_GROUP"
+    username = "nacos"
+    password = "nacos"
+    dataId = "seataServer.properties"
+  }
+  consul {
+    serverAddr = "127.0.0.1:8500"
+    aclToken = ""
+  }
+  apollo {
+    appId = "seata-server"
+    ## apolloConfigService will cover apolloMeta
+    apolloMeta = "http://192.168.1.204:8801"
+    apolloConfigService = "http://192.168.1.204:8080"
+    namespace = "application"
+    apolloAccesskeySecret = ""
+    cluster = "seata"
+  }
+  zk {
+    serverAddr = "127.0.0.1:2181"
+    sessionTimeout = 6000
+    connectTimeout = 2000
+    username = ""
+    password = ""
+    nodePath = "/seata/seata.properties"
+  }
+  etcd3 {
+    serverAddr = "http://localhost:2379"
+  }
+  file {
+    name = "file.conf"
+  }
+}
+
+```
+
+##### （5）配置Nacos信息
+
+###### 1.1  创建一个namespace
+
+![image-20220730114427482](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730114427.png)
+
+
+
+###### 1.2 创建一个配置seataServer.properties  
+
+![image-20220730114515766](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730114515.png)
+
+![image-20220730114536888](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730114537.png)
+
+
+
+###### 1.3配置内容
+
+**修改vgroupMapping和数据库配置信息**
+
+```properties
+transport.type=TCP
+transport.server=NIO
+transport.heartbeat=true
+transport.enableClientBatchSendRequest=true
+transport.threadFactory.bossThreadPrefix=NettyBoss
+transport.threadFactory.workerThreadPrefix=NettyServerNIOWorker
+transport.threadFactory.serverExecutorThreadPrefix=NettyServerBizHandler
+transport.threadFactory.shareBossWorker=false
+transport.threadFactory.clientSelectorThreadPrefix=NettyClientSelector
+transport.threadFactory.clientSelectorThreadSize=1
+transport.threadFactory.clientWorkerThreadPrefix=NettyClientWorkerThread
+transport.threadFactory.bossThreadSize=1
+transport.threadFactory.workerThreadSize=default
+transport.shutdown.wait=3
+transport.serialization=seata
+transport.compressor=none
+# server
+server.recovery.committingRetryPeriod=1000
+server.recovery.asynCommittingRetryPeriod=1000
+server.recovery.rollbackingRetryPeriod=1000
+server.recovery.timeoutRetryPeriod=1000
+server.undo.logSaveDays=7
+server.undo.logDeletePeriod=86400000
+server.maxCommitRetryTimeout=-1
+server.maxRollbackRetryTimeout=-1
+server.rollbackRetryTimeoutUnlockEnable=false
+server.distributedLockExpireTime=10000
+# store
+#model改为db
+store.mode=db
+store.lock.mode=file
+store.session.mode=file
+# store.publicKey=""
+store.file.dir=file_store/data
+store.file.maxBranchSessionSize=16384
+store.file.maxGlobalSessionSize=512
+store.file.fileWriteBufferCacheSize=16384
+store.file.flushDiskMode=async
+store.file.sessionReloadReadSize=100
+store.db.datasource=druid
+store.db.dbType=mysql
+#修改数据驱动，这里是mysql8，使用mysql5的话请修改
+store.db.driverClassName=com.mysql.cj.jdbc.Driver
+# 改为上面创建的seata服务数据库
+store.db.url=jdbc:mysql://192.168.137.110:3306/db_seata?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+# 改为自己的数据库用户名
+store.db.user=root
+# 改为自己的数据库密码
+store.db.password=root
+store.db.minConn=5
+store.db.maxConn=30
+store.db.globalTable=global_table
+store.db.branchTable=branch_table
+store.db.distributedLockTable=distributed_lock
+store.db.queryLimit=100
+store.db.lockTable=lock_table
+store.db.maxWait=5000
+store.redis.mode=single
+store.redis.single.host=127.0.0.1
+store.redis.single.port=6379
+# store.redis.sentinel.masterName=""
+# store.redis.sentinel.sentinelHosts=""
+store.redis.maxConn=10
+store.redis.minConn=1
+store.redis.maxTotal=100
+store.redis.database=0
+# store.redis.password=""
+store.redis.queryLimit=100
+# log
+log.exceptionRate=100
+# metrics
+metrics.enabled=false
+metrics.registryType=compact
+metrics.exporterList=prometheus
+metrics.exporterPrometheusPort=9898
+# service
+# 自己命名一个vgroupMapping   my_test_tx_group等下要用到  重中之重
+service.vgroupMapping.my_test_tx_group=default
+service.default.grouplist=127.0.0.1:8091
+service.enableDegrade=false
+service.disableGlobalTransaction=false
+# client
+client.rm.asyncCommitBufferLimit=10000
+client.rm.lock.retryInterval=10
+client.rm.lock.retryTimes=30
+client.rm.lock.retryPolicyBranchRollbackOnConflict=true
+client.rm.reportRetryCount=5
+client.rm.tableMetaCheckEnable=false
+client.rm.tableMetaCheckerInterval=60000
+client.rm.sqlParserType=druid
+client.rm.reportSuccessEnable=false
+client.rm.sagaBranchRegisterEnable=false
+client.rm.tccActionInterceptorOrder=-2147482648
+client.tm.commitRetryCount=5
+client.tm.rollbackRetryCount=5
+client.tm.defaultGlobalTransactionTimeout=60000
+client.tm.degradeCheck=false
+client.tm.degradeCheckAllowTimes=10
+client.tm.degradeCheckPeriod=2000
+client.tm.interceptorOrder=-2147482648
+client.undo.dataValidation=true
+client.undo.logSerialization=jackson
+client.undo.onlyCareUpdateColumns=true
+client.undo.logTable=undo_log
+client.undo.compress.enable=true
+client.undo.compress.type=zip
+client.undo.compress.threshold=64k
+```
+
+##### （6）启动Seata server
+
+> 需要保证配置的Mysql和nacos能正常连接
+
+```shell
+D:\Java\cloud-alibaba\seata\seata-server-1.4.2\bin\seata-server.bat
+```
+
+
+
+（7）开启一个项目，并成功注册Seata
+
+###### 1.1 pom
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>spring-cloud-2022</artifactId>
+        <groupId>com.ityj.springcloud</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>seata-order-service2001</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ityj.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.seata</groupId>
+                    <artifactId>seata-spring-boot-starter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.seata</groupId>
+            <artifactId>seata-spring-boot-starter</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+        </dependency>
+
+    </dependencies>
+</project>
+```
+
+
+
+
+
+###### 1.2 yml
+
+```yml
+server:
+  port: 2001
+
+spring:
+  application:
+    name: seata-order-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.137.110:3306/seata_account?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+
+seata:
+  enabled: true
+  enable-auto-data-source-proxy: true #是否开启数据源自动代理,默认为true
+  tx-service-group: my_test_tx_group  #要与配置文件中的vgroupMapping一致
+  registry:  #registry根据seata服务端的registry配置
+    type: Nacos #默认为file
+    nacos:
+      application: seata-server #配置自己的seata服务
+      server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
+      username: nacos
+      password: nacos
+      namespace: "34ebbd28-87c2-4e08-8295-d5873d10f079"
+      cluster: default # 配置自己的seata服务cluster, 默认为 default
+      group: SEATA_GROUP
+  config:
+    type: Nacos #默认file,如果使用file不配置下面的nacos,直接配置seata.service
+    nacos:
+      server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
+      group: SEATA_GROUP
+      username: nacos
+      password: nacos
+      namespace: "34ebbd28-87c2-4e08-8295-d5873d10f079"
+      dataId: seataServer.properties #配置自己的dataId,由于搭建服务端时把客户端的配置也写在了seataServer.properties,所以这里用了和服务端一样的配置文件,实际客户端和服务端的配置文件分离出来更好
+
+feign:
+  hystrix:
+    enabled: false
+
+logging:
+  level:
+    io:
+      seata: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+```
+
+
+
+###### 1.3 启动类
+
+```java
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+@EnableAutoDataSourceProxy
+public class SeataOrder2001Starter {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SeataOrder2001Starter.class, args);
+    }
+}
+
+```
+
+
+
+###### 1.4 启动测试
+
+![image-20220730115324158](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730115324.png)
+
+![image-20220730115339002](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730115339.png)
+
+![image-20220730120206681](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730120206.png)
+
+
+
+
+
+
+
+
+
+
+
+
 
 **一次业务操作需要跨多个数据源或需要跨多个系统进行远程调用，就会产生分布式事务问题。**
 
@@ -5398,9 +6119,123 @@ Sentinel的dashboard也显示出了限流规则。重启后依然生效。（记
 
 > 下订单->减库存->扣余额->改（订单）状态
 
+```sql
+CREATE DATABASE seata_order;
+ 
+CREATE DATABASE seata_storage;
+ 
+CREATE DATABASE seata_account;
+```
+
+```sql
+CREATE TABLE t_order(
+    `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT(11) DEFAULT NULL COMMENT '用户id',
+    `product_id` BIGINT(11) DEFAULT NULL COMMENT '产品id',
+    `count` INT(11) DEFAULT NULL COMMENT '数量',
+    `money` DECIMAL(11,0) DEFAULT NULL COMMENT '金额',
+    `status` INT(1) DEFAULT NULL COMMENT '订单状态：0：创建中; 1：已完结'
+) ENGINE=INNODB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+ 
+SELECT * FROM t_order;
+```
+
+```sql
+CREATE TABLE t_storage(
+    `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `product_id` BIGINT(11) DEFAULT NULL COMMENT '产品id',
+   `'total` INT(11) DEFAULT NULL COMMENT '总库存',
+    `used` INT(11) DEFAULT NULL COMMENT '已用库存',
+    `residue` INT(11) DEFAULT NULL COMMENT '剩余库存'
+) ENGINE=INNODB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+ 
+INSERT INTO seata_storage.t_storage(`id`,`product_id`,`total`,`used`,`residue`)
+VALUES('1','1','100','0','100');
+ 
+ 
+SELECT * FROM t_storage;
+
+```
+
+```sql
+CREATE TABLE t_account(
+    `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'id',
+    `user_id` BIGINT(11) DEFAULT NULL COMMENT '用户id',
+    `total` DECIMAL(10,0) DEFAULT NULL COMMENT '总额度',
+    `used` DECIMAL(10,0) DEFAULT NULL COMMENT '已用余额',
+    `residue` DECIMAL(10,0) DEFAULT '0' COMMENT '剩余可用额度'
+) ENGINE=INNODB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+ 
+INSERT INTO seata_account.t_account(`id`,`user_id`,`total`,`used`,`residue`) VALUES('1','1','1000','0','1000')
+ 
+ 
+ 
+SELECT * FROM t_account;
+
+```
+
+
+
+```sql
+-- for AT mode you must to init this sql for you business database. the seata server not need it.
+CREATE TABLE IF NOT EXISTS `undo_log`
+(
+    `branch_id`     BIGINT       NOT NULL COMMENT 'branch transaction id',
+    `xid`           VARCHAR(128) NOT NULL COMMENT 'global transaction id',
+    `context`       VARCHAR(128) NOT NULL COMMENT 'undo_log context,such as serialization',
+    `rollback_info` LONGBLOB     NOT NULL COMMENT 'rollback info',
+    `log_status`    INT(11)      NOT NULL COMMENT '0:normal status,1:defense status',
+    `log_created`   DATETIME(6)  NOT NULL COMMENT 'create datetime',
+    `log_modified`  DATETIME(6)  NOT NULL COMMENT 'modify datetime',
+    UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AT transaction mode undo table';
+```
+
+
+
+
+
 ##### 1、新建订单Order-Module
 
 seata-order-service2001模块
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
