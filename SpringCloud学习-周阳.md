@@ -6462,7 +6462,7 @@ CREATE TABLE IF NOT EXISTS `undo_log`
 
 order模块作为消费者入口，通过openfeign对库存storage和账户account模块进行调用。
 
-具体的代码为：``
+具体的代码为：`https://github.ccom/12722097458/spring-cloud-2022/commit/93e94081160a25ad9a675ae4c91d42b3344d449f`
 
 ![image-20220731113940848](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731113948.png)
 
