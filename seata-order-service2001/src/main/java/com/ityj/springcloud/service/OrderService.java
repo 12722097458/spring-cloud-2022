@@ -1,7 +1,10 @@
 package com.ityj.springcloud.service;
 
-public interface OrderService {
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.ityj.springcloud.entity.Order;
 
-    boolean save();
+public interface OrderService extends IService<Order> {
+
+    boolean saveOrder(Order order);
 
 }

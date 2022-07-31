@@ -10,7 +10,7 @@ spring:
         server-addr: 192.168.137.110:3333,192.168.137.110:4444,192.168.137.110:5555
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.137.110:3306/seata_account?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://192.168.137.110:3306/seata_order?useSSL=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: root
 

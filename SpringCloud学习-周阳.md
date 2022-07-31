@@ -4581,9 +4581,242 @@ https://nacos.io/zh-cn/docs/deployment.html
 
 ```shell
 cat D:\Java\cloud-alibaba\nacos-server-2.1.0\nacos\conf\nacos-mysql.sql
+OR
+https://github.com/alibaba/nacos/blob/develop/config/src/main/resources/META-INF/nacos-db.sql
 ```
 
 ![image-20220704225943292](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220704225943.png)
+
+```sql
+create database nacos_config;
+```
+
+```sql
+/*
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = config_info   */
+/******************************************/
+CREATE TABLE `config_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `data_id` varchar(255) NOT NULL COMMENT 'data_id',
+  `group_id` varchar(255) DEFAULT NULL,
+  `content` longtext NOT NULL COMMENT 'content',
+  `md5` varchar(32) DEFAULT NULL COMMENT 'md5',
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  `src_user` text COMMENT 'source user',
+  `src_ip` varchar(50) DEFAULT NULL COMMENT 'source ip',
+  `app_name` varchar(128) DEFAULT NULL,
+  `tenant_id` varchar(128) DEFAULT '' COMMENT '租户字段',
+  `c_desc` varchar(256) DEFAULT NULL,
+  `c_use` varchar(64) DEFAULT NULL,
+  `effect` varchar(64) DEFAULT NULL,
+  `type` varchar(64) DEFAULT NULL,
+  `c_schema` text,
+  `encrypted_data_key` text NOT NULL COMMENT '秘钥',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_configinfo_datagrouptenant` (`data_id`,`group_id`,`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='config_info';
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = config_info_aggr   */
+/******************************************/
+CREATE TABLE `config_info_aggr` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `data_id` varchar(255) NOT NULL COMMENT 'data_id',
+  `group_id` varchar(255) NOT NULL COMMENT 'group_id',
+  `datum_id` varchar(255) NOT NULL COMMENT 'datum_id',
+  `content` longtext NOT NULL COMMENT '内容',
+  `gmt_modified` datetime NOT NULL COMMENT '修改时间',
+  `app_name` varchar(128) DEFAULT NULL,
+  `tenant_id` varchar(128) DEFAULT '' COMMENT '租户字段',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_configinfoaggr_datagrouptenantdatum` (`data_id`,`group_id`,`tenant_id`,`datum_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='增加租户字段';
+
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = config_info_beta   */
+/******************************************/
+CREATE TABLE `config_info_beta` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `data_id` varchar(255) NOT NULL COMMENT 'data_id',
+  `group_id` varchar(128) NOT NULL COMMENT 'group_id',
+  `app_name` varchar(128) DEFAULT NULL COMMENT 'app_name',
+  `content` longtext NOT NULL COMMENT 'content',
+  `beta_ips` varchar(1024) DEFAULT NULL COMMENT 'betaIps',
+  `md5` varchar(32) DEFAULT NULL COMMENT 'md5',
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  `src_user` text COMMENT 'source user',
+  `src_ip` varchar(50) DEFAULT NULL COMMENT 'source ip',
+  `tenant_id` varchar(128) DEFAULT '' COMMENT '租户字段',
+  `encrypted_data_key` text NOT NULL COMMENT '秘钥',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_configinfobeta_datagrouptenant` (`data_id`,`group_id`,`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='config_info_beta';
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = config_info_tag   */
+/******************************************/
+CREATE TABLE `config_info_tag` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `data_id` varchar(255) NOT NULL COMMENT 'data_id',
+  `group_id` varchar(128) NOT NULL COMMENT 'group_id',
+  `tenant_id` varchar(128) DEFAULT '' COMMENT 'tenant_id',
+  `tag_id` varchar(128) NOT NULL COMMENT 'tag_id',
+  `app_name` varchar(128) DEFAULT NULL COMMENT 'app_name',
+  `content` longtext NOT NULL COMMENT 'content',
+  `md5` varchar(32) DEFAULT NULL COMMENT 'md5',
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  `src_user` text COMMENT 'source user',
+  `src_ip` varchar(50) DEFAULT NULL COMMENT 'source ip',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_configinfotag_datagrouptenanttag` (`data_id`,`group_id`,`tenant_id`,`tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='config_info_tag';
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = config_tags_relation   */
+/******************************************/
+CREATE TABLE `config_tags_relation` (
+  `id` bigint(20) NOT NULL COMMENT 'id',
+  `tag_name` varchar(128) NOT NULL COMMENT 'tag_name',
+  `tag_type` varchar(64) DEFAULT NULL COMMENT 'tag_type',
+  `data_id` varchar(255) NOT NULL COMMENT 'data_id',
+  `group_id` varchar(128) NOT NULL COMMENT 'group_id',
+  `tenant_id` varchar(128) DEFAULT '' COMMENT 'tenant_id',
+  `nid` bigint(20) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`nid`),
+  UNIQUE KEY `uk_configtagrelation_configidtag` (`id`,`tag_name`,`tag_type`),
+  KEY `idx_tenant_id` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='config_tag_relation';
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = group_capacity   */
+/******************************************/
+CREATE TABLE `group_capacity` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `group_id` varchar(128) NOT NULL DEFAULT '' COMMENT 'Group ID，空字符表示整个集群',
+  `quota` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '配额，0表示使用默认值',
+  `usage` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '使用量',
+  `max_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个配置大小上限，单位为字节，0表示使用默认值',
+  `max_aggr_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '聚合子配置最大个数，，0表示使用默认值',
+  `max_aggr_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个聚合数据的子配置大小上限，单位为字节，0表示使用默认值',
+  `max_history_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最大变更历史数量',
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_group_id` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='集群、各Group容量信息表';
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = his_config_info   */
+/******************************************/
+CREATE TABLE `his_config_info` (
+  `id` bigint(64) unsigned NOT NULL,
+  `nid` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `data_id` varchar(255) NOT NULL,
+  `group_id` varchar(128) NOT NULL,
+  `app_name` varchar(128) DEFAULT NULL COMMENT 'app_name',
+  `content` longtext NOT NULL,
+  `md5` varchar(32) DEFAULT NULL,
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `src_user` text,
+  `src_ip` varchar(50) DEFAULT NULL,
+  `op_type` char(10) DEFAULT NULL,
+  `tenant_id` varchar(128) DEFAULT '' COMMENT '租户字段',
+  `encrypted_data_key` text NOT NULL COMMENT '秘钥',
+  PRIMARY KEY (`nid`),
+  KEY `idx_gmt_create` (`gmt_create`),
+  KEY `idx_gmt_modified` (`gmt_modified`),
+  KEY `idx_did` (`data_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='多租户改造';
+
+
+/******************************************/
+/*   数据库全名 = nacos_config   */
+/*   表名称 = tenant_capacity   */
+/******************************************/
+CREATE TABLE `tenant_capacity` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `tenant_id` varchar(128) NOT NULL DEFAULT '' COMMENT 'Tenant ID',
+  `quota` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '配额，0表示使用默认值',
+  `usage` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '使用量',
+  `max_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个配置大小上限，单位为字节，0表示使用默认值',
+  `max_aggr_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '聚合子配置最大个数',
+  `max_aggr_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个聚合数据的子配置大小上限，单位为字节，0表示使用默认值',
+  `max_history_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最大变更历史数量',
+  `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tenant_id` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='租户容量信息表';
+
+
+CREATE TABLE `tenant_info` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `kp` varchar(128) NOT NULL COMMENT 'kp',
+  `tenant_id` varchar(128) default '' COMMENT 'tenant_id',
+  `tenant_name` varchar(128) default '' COMMENT 'tenant_name',
+  `tenant_desc` varchar(256) DEFAULT NULL COMMENT 'tenant_desc',
+  `create_source` varchar(32) DEFAULT NULL COMMENT 'create_source',
+  `gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
+  `gmt_modified` bigint(20) NOT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tenant_info_kptenantid` (`kp`,`tenant_id`),
+  KEY `idx_tenant_id` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='tenant_info';
+
+CREATE TABLE `users` (
+	`username` varchar(50) NOT NULL PRIMARY KEY,
+	`password` varchar(500) NOT NULL,
+	`enabled` boolean NOT NULL
+);
+
+CREATE TABLE `roles` (
+	`username` varchar(50) NOT NULL,
+	`role` varchar(50) NOT NULL,
+	UNIQUE INDEX `idx_user_role` (`username` ASC, `role` ASC) USING BTREE
+);
+
+CREATE TABLE `permissions` (
+    `role` varchar(50) NOT NULL,
+    `resource` varchar(255) NOT NULL,
+    `action` varchar(8) NOT NULL,
+    UNIQUE INDEX `uk_role_permission` (`role`,`resource`,`action`) USING BTREE
+);
+
+INSERT INTO users (username, password, enabled) VALUES ('nacos', '$2a$10$EuWPZHzz32dJN7jexM34MOeYirDdFAZm2kuWj7VEOJhhZkDrxfvUu', TRUE);
+
+INSERT INTO roles (username, role) VALUES ('nacos', 'ROLE_ADMIN');
+
+```
+
+
 
 ###### （2）切换数据源:改配置
 
@@ -5373,6 +5606,25 @@ Sentinel的dashboard也显示出了限流规则。重启后依然生效。（记
 
 ### 三、Seata
 
+**一次业务操作需要跨多个数据源或需要跨多个系统进行远程调用，就会产生分布式事务问题。**
+
+**Seata是一款开源的分布式事务解决方案，致力于在微服务架构下提供高性能和简单易用的分布式事务服务。**
+
+一个典型的分布式事务过程是由**ID+三组件模型**构成；
+
+* Transaction ID（全局唯一的事务ID）
+* Transaction Coordinator(TC)：事务协调器，维护全局事务的运行状态，负责协调并驱动全局事务的提交或回滚;
+* Transaction  Manager(TM) ：控制全局事务的边界，负责开启一个全局事务，并最终发起全局提交或全局回滚的决议;
+* Resource Manager(RM) ：控制分支事务，负责分支注册，状态汇报，并接收事务协调器的指令，驱动分支（本地）事务的提交和回滚；
+
+处理过程：
+
+![image-20210303152643881](D:\我的文件\gitRepository\cloud-image\img\image-20210303152643881.png)
+
+![image-20210303152647818](D:\我的文件\gitRepository\cloud-image\img\image-20210303152647818.png)
+
+
+
 #### 1、Seata Server本地启动
 
 > * 这里Seata Server版本是1.4.2
@@ -5792,6 +6044,11 @@ config {
 
 ###### 1.2 创建一个配置seataServer.properties  
 
+```shell
+[config-center](https://github.com/seata/seata/tree/develop/script/config-center)
+https://github.com/seata/seata/blob/develop/script/config-center/config.txt
+```
+
 ![image-20220730114515766](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730114515.png)
 
 ![image-20220730114536888](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730114537.png)
@@ -5801,6 +6058,11 @@ config {
 ###### 1.3配置内容
 
 **修改vgroupMapping和数据库配置信息**
+
+```shell
+seataServer.properties
+SEATA_GROUP
+```
 
 ```properties
 transport.type=TCP
@@ -6092,32 +6354,11 @@ public class SeataOrder2001Starter {
 
 
 
+#### 2、订单/库存/账户业务数据库准备
 
+有一个业务需要三个模块：下订单-->扣库存-->减账户（余额）
 
-
-
-**一次业务操作需要跨多个数据源或需要跨多个系统进行远程调用，就会产生分布式事务问题。**
-
-**Seata是一款开源的分布式事务解决方案，致力于在微服务架构下提供高性能和简单易用的分布式事务服务。**
-
-一个典型的分布式事务过程是由**ID+三组件模型**构成；
-
-* Transaction ID（全局唯一的事务ID）
-* Transaction Coordinator(TC)：事务协调器，维护全局事务的运行状态，负责协调并驱动全局事务的提交或回滚;
-* Transaction  Manager(TM) ：控制全局事务的边界，负责开启一个全局事务，并最终发起全局提交或全局回滚的决议;
-* Resource Manager(RM) ：控制分支事务，负责分支注册，状态汇报，并接收事务协调器的指令，驱动分支（本地）事务的提交和回滚；
-
-处理过程：
-
-![image-20210303152643881](D:\我的文件\gitRepository\cloud-image\img\image-20210303152643881.png)
-
-![image-20210303152647818](D:\我的文件\gitRepository\cloud-image\img\image-20210303152647818.png)
-
-#### 1、订单/库存/账户业务微服务准备
-
-##### 业务需求：
-
-> 下订单->减库存->扣余额->改（订单）状态
+首先创建好三个数据库
 
 ```sql
 CREATE DATABASE seata_order;
@@ -6127,7 +6368,12 @@ CREATE DATABASE seata_storage;
 CREATE DATABASE seata_account;
 ```
 
+
+
+##### （1）seata_order:存储订单的table
+
 ```sql
+drop table t_order;
 CREATE TABLE t_order(
     `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `user_id` BIGINT(11) DEFAULT NULL COMMENT '用户id',
@@ -6140,24 +6386,27 @@ CREATE TABLE t_order(
 SELECT * FROM t_order;
 ```
 
+##### （2）seata_storage:存储库存的table
+
 ```sql
+drop table t_storage;
 CREATE TABLE t_storage(
     `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `product_id` BIGINT(11) DEFAULT NULL COMMENT '产品id',
-   `'total` INT(11) DEFAULT NULL COMMENT '总库存',
+    `total` INT(11) DEFAULT NULL COMMENT '总库存',
     `used` INT(11) DEFAULT NULL COMMENT '已用库存',
     `residue` INT(11) DEFAULT NULL COMMENT '剩余库存'
 ) ENGINE=INNODB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
  
-INSERT INTO seata_storage.t_storage(`id`,`product_id`,`total`,`used`,`residue`)
-VALUES('1','1','100','0','100');
- 
- 
-SELECT * FROM t_storage;
+INSERT INTO seata_storage.t_storage(`id`,`product_id`,`total`,`used`,`residue`) VALUES(1, 1, 100, 0, 100);
 
+SELECT * FROM t_storage;
 ```
 
+##### （3）seata_account: 存储账户信息的table
+
 ```sql
+drop table t_account;
 CREATE TABLE t_account(
     `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'id',
     `user_id` BIGINT(11) DEFAULT NULL COMMENT '用户id',
@@ -6166,15 +6415,17 @@ CREATE TABLE t_account(
     `residue` DECIMAL(10,0) DEFAULT '0' COMMENT '剩余可用额度'
 ) ENGINE=INNODB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
  
-INSERT INTO seata_account.t_account(`id`,`user_id`,`total`,`used`,`residue`) VALUES('1','1','1000','0','1000')
- 
- 
- 
+INSERT INTO seata_account.t_account(`id`,`user_id`,`total`,`used`,`residue`) VALUES(1, 17241, 1000, 0, 1000); 
 SELECT * FROM t_account;
-
 ```
 
+##### （4）按照上述3库分别建对应的回滚日志表
 
+对应的undo_log脚本位置
+
+```shell
+https://github.com/seata/seata/blob/develop/script/client/at/db/mysql.sql
+```
 
 ```sql
 -- for AT mode you must to init this sql for you business database. the seata server not need it.
@@ -6193,35 +6444,99 @@ CREATE TABLE IF NOT EXISTS `undo_log`
   DEFAULT CHARSET = utf8mb4 COMMENT ='AT transaction mode undo table';
 ```
 
+![image-20220730123031193](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220730123031.png)
 
 
 
+#### 3、订单/库存/账户业务微服务准备
 
-##### 1、新建订单Order-Module
+**业务需求：**
 
-seata-order-service2001模块
-
-
-
+> 下订单->减库存->扣余额->改（订单）状态
 
 
 
+##### 1、新建三个模块
+
+> seata-order-service2001、seata-storage-service2002和seata-account-service2003
+
+order模块作为消费者入口，通过openfeign对库存storage和账户account模块进行调用。
+
+具体的代码为：``
+
+![image-20220731113940848](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731113948.png)
 
 
 
+##### 2、分布式事务测试
+
+在库存和账户模块都有一个对当前输入的信息校验功能，如果对应的产品或账户不存在。也就不能够进行update操作。
+
+这里直接抛出RuntimeException
+
+![image-20220731114220724](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731114221.png)
+
+###### 1.1 正常流程测试
+
+初始化表数据为：
+
+（1）t_order没有数据
+
+![image-20220731114441319](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731114441.png)
+
+（2）t_storage的库存为100，这里的productId为1
+
+![image-20220731114535931](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731114536.png)
+
+（3）t_account的账户余额为1000. userId为17241
+
+![image-20220731114632525](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731114632.png)
 
 
 
+调用下订单接口：
+
+用户17241买了productId为1的产品1个，花了200。最后执行成功
+
+![image-20220731115123052](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731115123.png)
+
+对应的表数据成功更新：
+
+![image-20220731115321640](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731115321.png)
+
+![image-20220731114928599](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731114928.png)
+
+![image-20220731114948680](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731114948.png)
 
 
 
+###### 1.2 异常流程测试
+
+假设输入的用户为1234，在数据库是不存在的。所以**下订单->减库存-**>扣余额->改（订单）状态这个流程中**扣余额**会抛出异常。
+
+测试看订单t_order和库存t_storage表数据能否回滚。
+
+在下订单的入口已经配置了全局事务的注解，并指定了回滚的异常类型
+
+```java
+@GlobalTransactional(name = "fsp-create-order", rollbackFor = Exception.class)
+```
 
 
 
+**调用下订单接口，userId不存在，抛出异常。调用失败。**
+
+==最终发现数据成功回滚==
+
+![image-20220731115753620](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731115753.png)
 
 
 
+![image-20220731120624888](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731120625.png)
 
+![image-20220731120636642](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731120637.png)
+
+![image-20220731120703846](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731120704.png)
 
 
 
