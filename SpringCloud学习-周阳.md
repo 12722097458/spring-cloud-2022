@@ -65,19 +65,19 @@ SR： Service Release，SR1表示第1个正式版本，一般同时标注GA：(G
 
 ###### 1.1 创建project
 
-![image-20210219093916795](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220606224125.png)
+![image-20210219093916795](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183235.png)
 
 ![image-20210219095354279](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220606224125.png)
 
-![image-20210224070754791](D:\我的文件\gitRepository\cloud-image\img\image-20210224070754791.png)
+![image-20210224070754791](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183247.png)
 
 ###### 1.2 字符编码
 
-![image-20210219101052852](D:\我的文件\gitRepository\cloud-image\img\image-20210219101052852.png)
+![image-20210219101052852](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183300.png)
 
 ###### 1.3 注解生效激活
 
-![image-20210219101146786](D:\我的文件\gitRepository\cloud-image\img\image-20210219101146786.png)
+![image-20210219101146786](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193025.png)
 
 ###### 1.4 配置父项目的pom.xml文件
 
@@ -706,7 +706,7 @@ public class EurekaServer7001Starter {
 
 [http://localhost:7001/](http://localhost:7001/)
 
-![image-20210220074914430](D:\我的文件\gitRepository\cloud-image\img\image-20210220074914430.png)
+![image-20210220074914430](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183349.png)
 
 
 
@@ -751,7 +751,7 @@ eureka:
 
 启动8081，并访问http://localhost:7001/
 
-![image-20210220080936972](D:\我的文件\gitRepository\cloud-image\img\image-20210220080936972.png)
+![image-20210220080936972](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183404.png)
 
 
 
@@ -761,7 +761,7 @@ eureka:
 
 修改后，启动80服务，访问http://localhost:7001/
 
-![image-20210220081853525](D:\我的文件\gitRepository\cloud-image\img\image-20210220081853525.png)
+![image-20210220081853525](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183429.png)
 
 
 
@@ -904,7 +904,7 @@ eureka:
 
 启动项目，访问http://eureka7001.com:7001/ ， http://eureka7002.com:7002/ 和 http://eureka7002.com:7002/
 
-![image-20220610003000951](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220610003001.png)
+![image-20220610003000951](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183408.png)
 
 发现相互注册成功
 
@@ -914,7 +914,7 @@ eureka:
 
 对于http请求，80端口默认可以不写。https默认：443
 
-![image-20210220101539732](D:\我的文件\gitRepository\cloud-image\img\image-20210220101539732.png)
+![image-20210220101539732](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183411.png)
 
 
 
@@ -954,7 +954,7 @@ eureka:
 
 可以自定义显示的服务器信息
 
-![image-20210220111433326](D:\我的文件\gitRepository\cloud-image\img\image-20210220111433326.png)
+![image-20210220111433326](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193003.png)
 
 
 
@@ -1002,7 +1002,7 @@ public class Payment8081Starter {
 
 Eureka默认的配置eureka.server.enable-self-preservation=true，开启了自我保护机制。
 
-![image-20220611172429514](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611172436.png)
+![image-20220611172429514](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192932.png)
 
 > Eureka的保护模式主要是用于一组客户端和Eureka Server之间存在网络分区场景下的保护。一旦进入保护模式，Eureka Server将会尝试保护其服务注册表中的信息，不再删除服务注册表中的数据，也就是不会销毁任何微服务。（payment8001即使宕机，也会在Eureka界面显示。）
 
@@ -1040,7 +1040,7 @@ Eureka默认的配置eureka.server.enable-self-preservation=true，开启了自�
 
 ![image-20220611174152884](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611174152.png)
 
-![image-20220611174207315](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220611174207.png)
+![image-20220611174207315](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192856.png)
 
 
 
@@ -1141,7 +1141,7 @@ stat /   # 查看节点的详细信息
 
 **ZooKeeper 的监听原理是什么？**
 
-![image-20210317162016666](D:\我的文件\gitRepository\cloud-image\img\image-20210317162016666.png)
+![image-20210317162016666](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183419.png)
 
 ### 2、创建一个生产者8084和一个消费者80注册入zookeeper
 
@@ -1329,7 +1329,7 @@ https://www.springcloud.cc/spring-cloud-consul.html   使用教程
 
 1.3 解压完成后出现一个consul的文件，执行`./consul`看到如下界面说明安装成功
 
-![image-20210221103008302](D:\我的文件\gitRepository\cloud-image\img\image-20210221103008302.png)
+![image-20210221103008302](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183010.png)
 
 1.4 安装成功后执行以下命令进行启动
 
@@ -1341,7 +1341,7 @@ https://www.springcloud.cc/spring-cloud-consul.html   使用教程
 
 启动成功后再浏览器上访问：http://192.168.118.128:8500
 
-![image-20210221103133975](D:\我的文件\gitRepository\cloud-image\img\image-20210221103133975.png)
+![image-20210221103133975](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183434.png)
 
 出现页面表示安装成功，如果页面打不开，记着关闭防火墙重试。
 
@@ -1495,7 +1495,7 @@ public class PaymentController {
 
 访问http://localhost:8006/consul/payment/get/1
 
-![image-20220612112306505](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612112306.png)
+![image-20220612112306505](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192828.png)
 
 
 
@@ -1603,7 +1603,7 @@ public class OrderController {
 
 访问http://localhost/consumer/consul/payment/get/1
 
-![image-20220612113606255](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612113606.png)
+![image-20220612113606255](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192744.png)
 
 #### 1.7 Consul总结
 
@@ -1619,7 +1619,7 @@ CAP：分布式系统有三个指标。CAP理论关注粒度是数据，而不�
 * A：Availability(可用性)
 * P：Partition tolerance(分区容错)：基本都需要满足
 
-![image-20220612115001174](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220612115001.png)
+![image-20220612115001174](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192758.png)
 
 1. eureka强调AP，保证服务能正常运行。当某一个服务宕机时，并不会立即将其注册信息删除。好死不如赖活
 2. zookeeper只有一个客户端，没有UI页面。
@@ -1664,7 +1664,7 @@ eureka依赖已经引入可Ribbon，所以加入@LoadBalancer可以实现默认�
 </dependency>
 ```
 
-![image-20210221173506210](D:\我的文件\gitRepository\cloud-image\img\image-20210221173506210.png)
+![image-20210221173506210](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183439.png)
 
 
 
@@ -1672,7 +1672,7 @@ eureka依赖已经引入可Ribbon，所以加入@LoadBalancer可以实现默认�
 
 Ribbon核心组件IRule：根据特定算法从服务列表中选取一个要访问的服务
 
-![image-20210221174753781](https://i.loli.net/2021/02/23/Kmgs1ERfH83IOSa.png)
+![image-20210221174753781](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192713.png)
 
 修改order80的负载规则：访问消费者的controller时，默认对服务提供者payment8081和8082是轮询使用。现在改为随机方式，
 
@@ -1680,7 +1680,7 @@ Ribbon核心组件IRule：根据特定算法从服务列表中选取一个要访
 
 这里要求不配置文件不能被SpringBoot的@ComponetScan扫描到，否则自定义的这个配置类就会被所有的Ribbon客户端共享，达不到特殊定制化的目的。（ssssss）
 
-![image-20210221175753534](D:\我的文件\gitRepository\cloud-image\img\image-20210221175753534.png)
+![image-20210221175753534](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183444.png)
 
 ```java
 package com.ityj.myrule;
@@ -1712,7 +1712,7 @@ http://localhost/consumer/payment/get/1
 
 多次访问，对应端口随机改变。表明切换成功。
 
-![image-20210221181929665](D:\我的文件\gitRepository\cloud-image\img\image-20210221181929665.png)
+![image-20210221181929665](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183448.png)
 
 ```java
 IRule --> AbstractLoadBalancerRule --> RoundRobinRule(默认的轮询机制)  -->choose()方法实现服务器的选择。
@@ -1726,7 +1726,7 @@ IRule --> AbstractLoadBalancerRule --> RoundRobinRule(默认的轮询机制)  --
 
 > Feign是一个声明式的WebService客户端，使用Feign能让编写Web Service更加简单。它的使用方法是定义一个服务接口，然后在上面添加注解。Feign可以与Eureka和Ribbon组合使用达到负载均衡。
 
-![image-20210221183416461](D:\我的文件\gitRepository\cloud-image\img\image-20210221183416461.png)
+![image-20210221183416461](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192637.png)
 
 ​	
 
@@ -1920,9 +1920,9 @@ logging:
 
 ### 1、Hystrix介绍
 
-![image-20210222083030356](D:\我的文件\gitRepository\cloud-image\img\image-20210222083030356.png)
+![image-20210222083030356](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731192545.png)
 
-![image-20210222083203460](D:\我的文件\gitRepository\cloud-image\img\image-20210222083203460.png)
+![image-20210222083203460](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183502.png)
 
 ### 2、Hystrix服务提供者8001构建
 
@@ -2071,13 +2071,13 @@ public class PaymentController {
 
 * 鼠标左键双击bin目录下 jmeter.bat或ApacheJMeter.jar进行启动
 
-  ![image-20220619160723910](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160724.png)
+  ![image-20220619160723910](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193541.png)
 
 * 配置一个连接进行高并发模拟：一组200个线程，执行100次
 
-  ![image-20220619160744081](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160744.png)
+  ![image-20220619160744081](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193531.png)
 
-  ![image-20220619160757119](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220619160757.png)
+  ![image-20220619160757119](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193513.png)
 
 ##### 结论
 
@@ -2397,7 +2397,7 @@ public CommonResult<String> orderTimeoutHandler(Long id) {
 
 #### 2. 服务熔断（break）
 
-![image-20210222221754446](D:\我的文件\gitRepository\cloud-image\img\image-20210222221754446.png)
+![image-20210222221754446](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183508.png)
 
 **如何配置服务熔断：**
 
@@ -2465,9 +2465,9 @@ feign:
 
 模拟异常：连续多次访问第二个链接*（抛异常），一段时间后再访问第一个链接，发现第一个链接也返回异常数据：服务熔断掉了；继续访问第一个链接，一段时间后发现可以正常访问了，表示链路恢复了。
 
-![image-20210222222923089](D:\我的文件\gitRepository\cloud-image\img\image-20210222222923089.png)
+![image-20210222222923089](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183513.png)
 
-![image-20210222222957912](D:\我的文件\gitRepository\cloud-image\img\image-20210222222957912.png)
+![image-20210222222957912](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183518.png)
 
 
 
@@ -2601,7 +2601,7 @@ http://localhost:8001//payment/circuitBreak/-11  失败
 
 > 原本网关主要是使用zuul1.X但是，1.X存在一些问题，在升级到2.X过程中公司内部出现一些问题，导致效率低下。Spring选择自己研发GateWay
 
-![image-20210224070032972](D:\我的文件\gitRepository\cloud-image\img\UlYvqHrB8ZW2nCc.png)
+![image-20210224070032972](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183525.png)
 
 ![image-20210224070059661](https://i.loli.net/2021/02/24/zBaVjUgdoXkfQMO.png)
 
@@ -2619,13 +2619,13 @@ Spring Cloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，
 * 熔断
 * 日志监控
 
-![image-20210224073052192](C:/Users/ayinj/AppData/Roaming/Typora/typora-user-images/image-20210224073052192.png)
+![image-20210224073052192](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731185034.png)
 
-![image-20210224222548368](D:\我的文件\gitRepository\cloud-image\img\image-20210224222548368.png)
+![image-20210224222548368](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183530.png)
 
-![image-20210224222615115](D:\我的文件\gitRepository\cloud-image\img\image-20210224222615115.png)
+![image-20210224222615115](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183534.png)
 
-![image-20210224222702294](D:\我的文件\gitRepository\cloud-image\img\image-20210224222702294.png)
+![image-20210224222702294](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183539.png)
 
 
 
@@ -2643,7 +2643,7 @@ Spring Cloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，
 
 指的是Spring框架中GatewayFilter的实例，使用过滤器，可以在请求被路由前或者之后对请求进行修改。
 
-![image-20210224222858532](D:\我的文件\gitRepository\cloud-image\img\image-20210224222858532.png)
+![image-20210224222858532](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183543.png)
 
 #### 2、搭建gateway9527项目
 
@@ -2893,9 +2893,9 @@ eureka:
 
 启动9527项目，发现启动项里有很多Route Predicate Factories
 
-![image-20210225213937118](D:\我的文件\gitRepository\cloud-image\img\image-20210225213937118.png)
+![image-20210225213937118](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183547.png)
 
-![image-20210225214038310](D:\我的文件\gitRepository\cloud-image\img\image-20210225214038310.png)
+![image-20210225214038310](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183552.png)
 
 总结：说白了，Predicate就是为了实现一组匹配规则，让请求过来找到对应的Route进行处理
 
@@ -2912,7 +2912,7 @@ predicates:
 
 #### 7、Filter的使用
 
-![image-20210225221404766](D:\我的文件\gitRepository\cloud-image\img\image-20210225221404766.png)
+![image-20210225221404766](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183556.png)
 
 ##### 1、自定义全局GlobalFilter过滤器
 
@@ -2958,11 +2958,11 @@ public class GatewayFilter implements GlobalFilter, Ordered {
 
 ## 八、Config分布式配置中心
 
-![image-20210227211918837](D:\我的文件\gitRepository\cloud-image\img\image-20210227211918837.png)
+![image-20210227211918837](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183600.png)
 
 **![image-20220626225912183](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220626225912.png)**
 
-![image-20210227212452728](D:\我的文件\gitRepository\cloud-image\img\image-20210227212452728.png)
+![image-20210227212452728](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183604.png)
 
 #### 1、Config服务端配置与测试
 
@@ -3124,11 +3124,11 @@ public class CloudConfig3344Starter {
 
 ##### （3）加bootstap.yml
 
-![image-20210228111514141](D:\我的文件\gitRepository\cloud-image\img\image-20210228111514141.png)
+![image-20210228111514141](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183608.png)
 
 由于idea不会将bootstrap.yml转换成带小叶子的spring配置文件，需要手动操作。
 
-![image-20210228112325189](D:\我的文件\gitRepository\cloud-image\img\image-20210228112325189.png)
+![image-20210228112325189](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183611.png)
 
 找到对应的文件就行了。
 
@@ -3281,17 +3281,17 @@ management:
 
 **Spring Cloud Bus配合Spring Cloud Config使用可以实现配置的动态刷新，通过广播实现一次通知，处处生效。**
 
-![image-20210228161626445](D:\我的文件\gitRepository\cloud-image\img\image-20210228161626445.png)
+![image-20210228161626445](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183616.png)
 
 Bus支持两种消息代理：RabbitMQ和Kafka
 
-![image-20210228161738048](D:\我的文件\gitRepository\cloud-image\img\image-20210228161738048.png)
+![image-20210228161738048](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183620.png)
 
 
 
 为何被称为总线？
 
-![image-20210228161759871](D:\我的文件\gitRepository\cloud-image\img\image-20210228161759871.png)
+![image-20210228161759871](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183624.png)
 
 #### 1、RabbitMQ环境配置
 
@@ -3303,7 +3303,7 @@ Bus支持两种消息代理：RabbitMQ和Kafka
 
 cmd进入命令窗口，执行`rabbitmq-plugins enable rabbitmq_management`命令：
 
-![image-20210228162120060](D:\我的文件\gitRepository\cloud-image\img\image-20210228162120060.png)
+![image-20210228162120060](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183713.png)
 
 （3）访问地址查看是否安装成功
 
@@ -3311,11 +3311,11 @@ cmd进入命令窗口，执行`rabbitmq-plugins enable rabbitmq_management`命�
 
 默认用户为 guest/guest
 
-![image-20210228162400029](D:\我的文件\gitRepository\cloud-image\img\image-20210228162400029.png)
+![image-20210228162400029](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183730.png)
 
-![image-20210228162408910](D:\我的文件\gitRepository\cloud-image\img\image-20210228162408910.png)
+![image-20210228162408910](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183755.png)
 
-![image-20210228162427749](D:\我的文件\gitRepository\cloud-image\img\image-20210228162427749.png)
+![image-20210228162427749](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183808.png)
 
 
 
@@ -3352,7 +3352,7 @@ curl -X POST "http://localhost:3366/actuator/refresh"
 
 > 利用消息总线触发一个服务端ConfigServer的/bus/refresh端点,而刷新所有客户端的配置（更加推荐）
 
-![image-20210228221042471](D:\我的文件\gitRepository\cloud-image\img\image-20210228221042471.png)
+![image-20210228221042471](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183819.png)
 
 ##### （1）给cloud-config-center-3344配置中心服务端添加消息总线支持
 
@@ -3482,25 +3482,25 @@ eg:只通知3355，不通知3366
 
 ==屏蔽底层消息中间件的差异，降低切换版本，统一消息的编程模型==
 
-![image-20210301163054066](D:\我的文件\gitRepository\cloud-image\img\image-20210301163054066.png)
+![image-20210301163054066](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183825.png)
 
 为什么用Cloud Stream？
 
-![image-20210301163212648](D:\我的文件\gitRepository\cloud-image\img\image-20210301163212648.png)
+![image-20210301163212648](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183832.png)
 
-![image-20210301163219732](D:\我的文件\gitRepository\cloud-image\img\image-20210301163219732.png)
+![image-20210301163219732](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183830.png)
 
-![image-20210301163226514](D:\我的文件\gitRepository\cloud-image\img\image-20210301163226514.png)
+![image-20210301163226514](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183838.png)
 
 > Stream中的消息通信方式遵循了发布-订阅模式，Topic主题进行广播：在RabbitMQ就是Exchange，在kafka中就是Topic。
 
 
 
-![image-20210301163440328](D:\我的文件\gitRepository\cloud-image\img\image-20210301163440328.png)
+![image-20210301163440328](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183840.png)
 
-![image-20210301163451470](D:\我的文件\gitRepository\cloud-image\img\image-20210301163451470.png)
+![image-20210301163451470](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183842.png)
 
-![image-20210301163701364](D:\我的文件\gitRepository\cloud-image\img\image-20210301163701364.png)
+![image-20210301163701364](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183845.png)
 
 #### 2、消息驱动之生产者8801项目搭建
 
@@ -3814,7 +3814,7 @@ cloud-stream-rabbitmq-consumer8803
 
 生产实际案例:
 
-![image-20210301192500890](D:\我的文件\gitRepository\cloud-image\img\image-20210301192500890.png)
+![image-20210301192500890](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183901.png)
 
 ##### （1）分组
 
@@ -3824,7 +3824,7 @@ cloud-stream-rabbitmq-consumer8803
 
 8802和8803默认每一个微服务的组都是不同的：
 
-![image-20210301193008064](D:\我的文件\gitRepository\cloud-image\img\image-20210301193008064.png)
+![image-20210301193008064](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183905.png)
 
 
 
@@ -3868,7 +3868,7 @@ spring.cloud.stream.bindings.input.group=group-consumer-yj
 
 ==所以group分组一定要加上==
 
-![image-20220628094904084](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628094904.png)
+![image-20220628094904084](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193436.png)
 
 **![image-20220628095000745](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220628095000.png)**
 
@@ -3882,13 +3882,13 @@ spring.cloud.stream.bindings.input.group=group-consumer-yj
 
 为什么会出现这个技术？需要解决哪些问题？
 
-![image-20210301212342572](D:\我的文件\gitRepository\cloud-image\img\image-20210301212342572.png)
+![image-20210301212342572](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183920.png)
 
 是什么？
 
 > Spring Cloud Sleuth提供了一套完整的服务跟踪的解决方案，在分布式系统中提供追踪解决方案并且兼容支持了zipkin。
 
-![image-20210301212424848](D:\我的文件\gitRepository\cloud-image\img\image-20210301212424848.png)
+![image-20210301212424848](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183923.png)
 
 
 
@@ -3909,9 +3909,9 @@ java -jar zipkin-server-2.12.9-exec.jar
 
 ##### 2、运行控制台
 
-![image-20210301214019704](D:\我的文件\gitRepository\cloud-image\img\image-20210301214019704.png)
+![image-20210301214019704](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183927.png)
 
-![image-20210301213934749](D:\我的文件\gitRepository\cloud-image\img\image-20210301213934749.png)
+![image-20210301213934749](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183933.png)
 
 > Trace:类似于树结构的Span集合，表示一条调用链路，存在唯一标识；span:表示调用链路来源，通俗的理解span就是一次请求信息
 
@@ -3977,7 +3977,7 @@ spring:
 
 并登录http://localhost:9411/zipkin/
 
-![image-20220629233959851](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220629234000.png)
+![image-20220629233959851](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193413.png)
 
 可见，服务名有了注册的服务。
 
@@ -4005,7 +4005,7 @@ Nacos就是注册中心+配置中心的组合，一个更易于构建云原生�
 
 替代Eureka做服务注册中心，替代Config做服务配置中心。
 
-![image-20210302083906157](D:\我的文件\gitRepository\cloud-image\img\image-20210302083906157.png)
+![image-20210302083906157](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184031.png)
 
 #### 2、安装并运行Nacos
 
@@ -4142,9 +4142,9 @@ public class PaymentController {
 
 > 或者取巧不想新建重复体力劳动，直接在idea中拷贝虚拟端口映射
 
-![image-20210302090231461](D:\我的文件\gitRepository\cloud-image\img\image-20210302090231461.png)
+![image-20210302090231461](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183946.png)
 
-![image-20210302090355754](D:\我的文件\gitRepository\cloud-image\img\image-20210302090355754.png)
+![image-20210302090355754](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183950.png)
 
 保存，启动9011，访问http://localhost:9001/payment/nacos/33和http://localhost:9011/payment/nacos/33都可以正常。
 
@@ -4196,7 +4196,7 @@ cloudalibaba-consumer-nacos-order83
 
 nacos支持负载均衡，因为内部集成了ribbon。
 
-![image-20210302091237551](D:\我的文件\gitRepository\cloud-image\img\image-20210302091237551.png)
+![image-20210302091237551](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184051.png)
 
 ###### （3）改yml
 
@@ -4289,7 +4289,7 @@ public class OrderController {
 
 ##### 4、各种服务注册对比
 
-![image-20210302092813962](D:\我的文件\gitRepository\cloud-image\img\image-20210302092813962.png)
+![image-20210302092813962](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731183957.png)
 
 
 
@@ -4299,7 +4299,7 @@ A：高可用，一定有返回
 
 C：数据一致性
 
-![image-20210302093350353](D:\我的文件\gitRepository\cloud-image\img\image-20210302093350353.png)
+![image-20210302093350353](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184001.png)
 
 `curl -X PUT '$NACOS_SERVER:8848/nacos/v1/ns/operator/switches?entry=serverMode&value=CP'`
 
@@ -4375,7 +4375,7 @@ application.yml是获取Nacos配置中心的配置文件内容，而bootstrap.ym
 
 yml的两个配置，为什么要配置两个？
 
-![](D:\我的文件\gitRepository\cloud-image\img\image-20210302094607625.png)
+![](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184008.png)
 
 application.yml
 
@@ -4465,15 +4465,15 @@ public class ConfigController {
 
 对于多环境多项目管理，可以通过Nacos简单地实现。
 
-![image-20210302103609376](D:\我的文件\gitRepository\cloud-image\img\image-20210302103609376.png)
+![image-20210302103609376](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184016.png)
 
 ###### （1）Data Id
 
 dataId是根据spring.profiles.active的不同来实现区分的：
 
-![image-20210302104149238](D:\我的文件\gitRepository\cloud-image\img\image-20210302104149238.png)
+![image-20210302104149238](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184025.png)
 
-![image-20210302104058466](D:\我的文件\gitRepository\cloud-image\img\image-20210302104058466.png)
+![image-20210302104058466](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184046.png)
 
 修改application.yml的active属性即可
 
@@ -4485,7 +4485,7 @@ spring:
 
 重启3377，访问http://localhost:3377/config/info，可实现切换。
 
-![image-20210302104535016](D:\我的文件\gitRepository\cloud-image\img\image-20210302104535016.png)
+![image-20210302104535016](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184110.png)
 
 ###### （2）group实现分组
 
@@ -4493,7 +4493,7 @@ spring:
 
 新建一个DAT的group：DAT_GROUP
 
-![image-20210302105449638](D:\我的文件\gitRepository\cloud-image\img\image-20210302105449638.png)
+![image-20210302105449638](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184112.png)
 
 此时修改bootstrap.yml的配置：添加group的属性
 
@@ -4513,19 +4513,19 @@ spring:
 
 重启访问http://localhost:3377/config/info，可实现切换。
 
-![image-20210302105433051](D:\我的文件\gitRepository\cloud-image\img\image-20210302105433051.png)
+![image-20210302105433051](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184119.png)
 
 ###### （3）通过namespace实现多项目的划分
 
 通过namespace可以对不同的项目进行分组，比如ssm-learning和springboot-learning会拥有不同的配置文件，此时就可以通过命名空间来实现项目的划分。
 
-![image-20210302105603006](D:\我的文件\gitRepository\cloud-image\img\image-20210302105603006.png)
+![image-20210302105603006](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184121.png)
 
-![image-20210302105620881](D:\我的文件\gitRepository\cloud-image\img\image-20210302105620881.png)
+![image-20210302105620881](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184124.png)
 
 自动生成了一个命名空间id，这个id需要配置在项目的配置文件中，实现分组查找。
 
-![image-20210302105738663](D:\我的文件\gitRepository\cloud-image\img\image-20210302105738663.png)
+![image-20210302105738663](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184129.png)
 
 多了一个命名空间ssm-learning
 
@@ -4533,7 +4533,7 @@ spring:
 
 组改为DAT_GROUP，这样项目中group就不需要修改了，而正常生产中也需要制定相应的group，避免default
 
-![image-20210302110002354](D:\我的文件\gitRepository\cloud-image\img\image-20210302110002354.png)
+![image-20210302110002354](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184133.png)
 
 修改yml
 
@@ -4554,9 +4554,9 @@ spring:
 
 重启，调用http://localhost:3377/config/info，可正常访问。
 
-![image-20210302110233932](D:\我的文件\gitRepository\cloud-image\img\image-20210302110233932.png)
+![image-20210302110233932](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184141.png)
 
-![image-20210302110305326](D:\我的文件\gitRepository\cloud-image\img\image-20210302110305326.png)
+![image-20210302110305326](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184139.png)
 
 
 
@@ -5162,7 +5162,7 @@ public class FlowLimitController {
 
 访问http://localhost:8401/testA和http://localhost:8401/testB后，可以看到控制台有对这两个接口的监控详细信息。
 
-![image-20210302132619819](D:\我的文件\gitRepository\cloud-image\img\image-20210302132619819.png)
+![image-20210302132619819](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184150.png)
 
 
 
@@ -5174,11 +5174,11 @@ public class FlowLimitController {
 
 QPS：每秒的访问量
 
-![image-20210302143549378](D:\我的文件\gitRepository\cloud-image\img\image-20210302143549378.png)
+![image-20210302143549378](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184156.png)
 
 表示每秒仅支持访问一次，超过一次将会放回错误信息！
 
-![image-20210302143650443](D:\我的文件\gitRepository\cloud-image\img\image-20210302143650443.png)
+![image-20210302143650443](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184200.png)
 
 ##### （2）线程数直接失败
 
@@ -5199,17 +5199,17 @@ public String testB() {
 
 在Sentinel控制面板中进行配置：
 
-![image-20210302143854604](D:\我的文件\gitRepository\cloud-image\img\image-20210302143854604.png)
+![image-20210302143854604](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184203.png)
 
 线程数大于1将会直接报错。
 
 此时调用多个线程访问，即多次F5刷新，此时会返回错误信息：
 
-![image-20210302143943601](D:\我的文件\gitRepository\cloud-image\img\image-20210302143943601.png)
+![image-20210302143943601](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184207.png)
 
 ##### （3）流控效果-Warm Up
 
-![image-20210302150430692](D:\我的文件\gitRepository\cloud-image\img\image-20210302150430692.png)
+![image-20210302150430692](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184214.png)
 
 静置一段时间后初次访问开始计算
 
@@ -5217,17 +5217,17 @@ public String testB() {
 
 超过5秒，回归正常的阈值设置10；查过10的QPS将会限流
 
-![image-20210302151243157](D:\我的文件\gitRepository\cloud-image\img\image-20210302151243157.png)
+![image-20210302151243157](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184217.png)
 
 
 
 
 
-![image-20210302151452841](D:\我的文件\gitRepository\cloud-image\img\image-20210302151452841.png)
+![image-20210302151452841](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184220.png)
 
 **应用场景：**
 
-![image-20210303082650279](D:\我的文件\gitRepository\cloud-image\img\image-20210303082650279.png)
+![image-20210303082650279](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184227.png)
 
 ##### （4）流控效果-排队等待
 
@@ -5262,15 +5262,15 @@ public String testB() {
 
 配置sentinel
 
-![image-20210302144811329](D:\我的文件\gitRepository\cloud-image\img\image-20210302144811329.png)
+![image-20210302144811329](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184232.png)
 
 测试：
 
 使用postman访问/testB，模拟高并发
 
-![image-20210302145055760](D:\我的文件\gitRepository\cloud-image\img\image-20210302145055760.png)
+![image-20210302145055760](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184235.png)
 
-![image-20210302145127906](D:\我的文件\gitRepository\cloud-image\img\image-20210302145127906.png)
+![image-20210302145127906](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184305.png)
 
 
 
@@ -5278,7 +5278,7 @@ public String testB() {
 
 同时调用A，看A的运行情况。
 
-![image-20210302145306875](D:\我的文件\gitRepository\cloud-image\img\image-20210302145306875.png)
+![image-20210302145306875](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184241.png)
 
 A直接被限流，当B执行完毕（没有高并发访问）时，A可以再次正常运行。
 
@@ -5286,13 +5286,13 @@ A直接被限流，当B执行完毕（没有高并发访问）时，A可以再�
 
 > 1.8+有了新的改版：https://github.com/alibaba/Sentinel/wiki/%E7%86%94%E6%96%AD%E9%99%8D%E7%BA%A7
 
-![image-20210303090210435](D:\我的文件\gitRepository\cloud-image\img\image-20210303090210435.png)
+![image-20210303090210435](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184312.png)
 
 ##### （1）RT
 
-![image-20210303090307739](D:\我的文件\gitRepository\cloud-image\img\image-20210303090307739.png)
+![image-20210303090307739](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184248.png)
 
-![image-20210303090314496](D:\我的文件\gitRepository\cloud-image\img\image-20210303090314496.png)
+![image-20210303090314496](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184517.png)
 
 添加测试方法：
 
@@ -5310,7 +5310,7 @@ public String testD() {
 }
 ```
 
-![image-20210303091501582](D:\我的文件\gitRepository\cloud-image\img\image-20210303091501582.png)
+![image-20210303091501582](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184252.png)
 
 > RT是指平均响应时间，如果1秒内持续进入了5个及以上的线程请求，并且平均响应时间大于0.2秒，那么接下来的5秒钟，服务将会熔断，不可用。5秒后恢复正常。
 
@@ -5318,31 +5318,31 @@ public String testD() {
 
 使用Jmeter压测，1秒钟5次请求，并且一直执行，而testD方法的执行时间大于200ms，所以会进行熔断降级处理。
 
-![image-20210303092106153](C:/Users/ayinj/AppData/Roaming/Typora/typora-user-images/image-20210303092106153.png)
+![image-20210303092106153](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184255.png)
 
 
 
-![image-20210303092139751](D:\我的文件\gitRepository\cloud-image\img\image-20210303092139751.png)
+![image-20210303092139751](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184258.png)
 
-![image-20210303093906803](D:\我的文件\gitRepository\cloud-image\img\image-20210303093906803.png)
+![image-20210303093906803](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184300.png)
 
 ##### （2）异常比例
 
 > 不要加异常处理器ExceptionHandler，否则不会被认为是异常
 
-![image-20210303094054649](C:/Users/ayinj/AppData/Roaming/Typora/typora-user-images/image-20210303094054649.png)
+![image-20210303094054649](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731185042.png)
 
-![image-20210303094105415](D:\我的文件\gitRepository\cloud-image\img\image-20210303094105415.png)
+![image-20210303094105415](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184319.png)
 
-![image-20210303094354662](D:\我的文件\gitRepository\cloud-image\img\image-20210303094354662.png)
+![image-20210303094354662](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184322.png)
 
 ##### （3）异常数
 
-![image-20210303094319222](D:\我的文件\gitRepository\cloud-image\img\image-20210303094319222.png)
+![image-20210303094319222](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184522.png)
 
-![image-20210303094323432](D:\我的文件\gitRepository\cloud-image\img\image-20210303094323432.png)
+![image-20210303094323432](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184325.png)
 
-![image-20210303094341479](D:\我的文件\gitRepository\cloud-image\img\image-20210303094341479.png)
+![image-20210303094341479](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184329.png)
 
 #### 5、热点key降级
 
@@ -5385,7 +5385,7 @@ public String hotKey_fallBack(String id, String name) {
 
 配置即可：
 
-![image-20210303101113651](D:\我的文件\gitRepository\cloud-image\img\image-20210303101113651.png)
+![image-20210303101113651](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184358.png)
 
 测试http://localhost:8401/testHotKey?id=666和http://localhost:8401/testHotKey?id=123
 
@@ -5401,7 +5401,7 @@ public String hotKey_fallBack(String id, String name) {
 
 作为系统的总把关，例如网红小吃店，如果只能容纳50人，到50后就拒绝进入了。
 
-![image-20210303103254176](D:\我的文件\gitRepository\cloud-image\img\image-20210303103254176.png)
+![image-20210303103254176](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184403.png)
 
 http://localhost:8401/testA
 
@@ -5439,13 +5439,13 @@ http://localhost:8401/byResource
 
 
 
-![image-20210303105237144](D:\我的文件\gitRepository\cloud-image\img\image-20210303105237144.png)
+![image-20210303105237144](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184410.png)
 
-![image-20210303105347348](D:\我的文件\gitRepository\cloud-image\img\image-20210303105347348.png)
+![image-20210303105347348](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184414.png)
 
 多次访问
 
-![image-20210303105254463](D:\我的文件\gitRepository\cloud-image\img\image-20210303105254463.png)
+![image-20210303105254463](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184418.png)
 
 
 
@@ -5453,9 +5453,9 @@ http://localhost:8401/byResource
 
 关闭8401服务，sentinel工作台上没有了相关的服务，请求也变为访问错误
 
-![image-20210303105513412](D:\我的文件\gitRepository\cloud-image\img\image-20210303105513412.png)
+![image-20210303105513412](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184422.png)
 
-![image-20210303105546371](D:\我的文件\gitRepository\cloud-image\img\image-20210303105546371.png)
+![image-20210303105546371](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184429.png)
 
 说明注册没有持久化。
 
@@ -5472,17 +5472,17 @@ public CommonResult byUrl()
 
 
 
-![image-20210303105829319](D:\我的文件\gitRepository\cloud-image\img\image-20210303105829319.png)
+![image-20210303105829319](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184434.png)
 
 这个没有编写对应的兜底策略，返回的是系统默认提示。
 
 http://localhost:8401/rateLimit/byUrl
 
-![](D:\我的文件\gitRepository\cloud-image\img\image-20210303110004030.png)
+![](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184438.png)
 
 **问题：**
 
-![image-20210303105915372](D:\我的文件\gitRepository\cloud-image\img\image-20210303105915372.png)
+![image-20210303105915372](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184441.png)
 
 
 
@@ -5522,11 +5522,11 @@ public CommonResult customerBlockHandler() {
 
 （3）测试
 
-![image-20210303111316920](D:\我的文件\gitRepository\cloud-image\img\image-20210303111316920.png)
+![image-20210303111316920](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184444.png)
 
 http://localhost:8401/rateLimit/customerBlockHandler
 
-![image-20210303111854207](D:\我的文件\gitRepository\cloud-image\img\image-20210303111854207.png)
+![image-20210303111854207](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184447.png)
 
 多次访问，可见：走了自定义的全局处理策略。
 
@@ -5619,9 +5619,9 @@ Sentinel的dashboard也显示出了限流规则。重启后依然生效。（记
 
 处理过程：
 
-![image-20210303152643881](D:\我的文件\gitRepository\cloud-image\img\image-20210303152643881.png)
+![image-20210303152643881](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184526.png)
 
-![image-20210303152647818](D:\我的文件\gitRepository\cloud-image\img\image-20210303152647818.png)
+![image-20210303152647818](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731184457.png)
 
 
 
@@ -6950,7 +6950,7 @@ Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected,
 
 ### 1. 降低nacos.client版本
 
-![image-20220708094528862](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708094529.png)
+![image-20220708094528862](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193228.png)
 
 
 
@@ -6958,7 +6958,7 @@ Caused by: com.alibaba.nacos.api.exception.NacosException: Client not connected,
 
 > 暂时用这种吧
 
-![image-20220708094759415](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220708094759.png)
+![image-20220708094759415](https://alinyun-images-repository.oss-cn-shanghai.aliyuncs.com/images/20220731193108.png)
 
 
 
